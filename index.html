@@ -16,6 +16,9 @@
             --bg:#f5f5f7; --surface:#ffffff; --surface-alt:#fafafb;
             --border:#e5e5e8; --border-hover:#cfcfd4;
             --text:#111111; --text-sub:#55555d; --text-muted:#9999a1; --ink:#000000; --accent:#000000;
+            /* 외부광선 및 그라데이션 커스텀 변수 추가 */
+            --glow-color: rgba(0,0,0,0.4);
+            --grad-color: rgba(0,0,0,0.85);
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -150,8 +153,9 @@
         .dyn-author { font-size:11px; font-weight:500; color:white; letter-spacing:2px; margin-bottom:8px; text-transform: uppercase; text-align:center; width: auto; }
         .dyn-title { font-size:36px; font-weight:700; color:white; line-height:1.15; letter-spacing:-0.03em; text-align:center; width: auto; }
         
-        .has-shadow .text-drag { text-shadow: 0 2px 10px rgba(0,0,0,0.4); }
-        .has-shadow .dyn-title { text-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        /* 외부광선 효과 입체 구현을 위해 var(--glow-color) 기반으로 커스텀 매핑 */
+        .has-shadow .text-drag { text-shadow: 0 2px 10px var(--glow-color), 0 0 5px var(--glow-color); }
+        .has-shadow .dyn-title { text-shadow: 0 4px 15px var(--glow-color), 0 0 10px var(--glow-color); }
 
         .deco-group { opacity: 0; transition: opacity 0.3s, color 0.3s; pointer-events: auto; }
         .cover-text-overlay.visible, .deco-group.visible { opacity:1; }
@@ -167,8 +171,8 @@
 
         /* ── THEME: BLACK ── */
         .theme-black .text-drag, .theme-black .dyn-author, .theme-black .dyn-title { color: #111; }
-        .theme-black.has-shadow .text-drag { text-shadow: 0 2px 10px rgba(255,255,255,0.6); }
-        .theme-black.has-shadow .dyn-title { text-shadow: 0 4px 20px rgba(255,255,255,0.8); }
+        .theme-black.has-shadow .text-drag { text-shadow: 0 2px 10px var(--glow-color); }
+        .theme-black.has-shadow .dyn-title { text-shadow: 0 4px 20px var(--glow-color); }
 
         /* ── 1. BOOK (책 표지) ────────────── */
         .mockup-book { position:relative; width:280px; height:410px; transform-style:preserve-3d; display:flex; align-items:center; justify-content:center; }
@@ -406,6 +410,30 @@
                     <div class="swatch" style="background:#e63946" data-tc="#e63946"></div>
                     <div class="swatch" style="background:#a8dadc" data-tc="#a8dadc"></div>
                     <div class="swatch-custom"><span>+</span><input type="color" id="tcColorCustom" value="#ffffff"></div>
+                </div>
+            </div>
+
+            <!-- 신규 추가: 글자 외부광선 색상 선택 탭 -->
+            <div class="group">
+                <span class="group-label">외부광선 (그림자) 색상</span>
+                <div class="swatch-row">
+                    <div class="swatch active" style="background:rgba(0,0,0,0.4)" data-gc="rgba(0,0,0,0.4)"></div>
+                    <div class="swatch" style="background:rgba(255,255,255,0.6)" data-gc="rgba(255,255,255,0.6)"></div>
+                    <div class="swatch" style="background:rgba(212,175,55,0.6)" data-gc="rgba(212,175,55,0.6)"></div>
+                    <div class="swatch" style="background:rgba(230,57,70,0.6)" data-gc="rgba(230,57,70,0.6)"></div>
+                    <div class="swatch-custom"><span>+</span><input type="color" id="gcColorCustom" value="#000000"></div>
+                </div>
+            </div>
+
+            <!-- 신규 추가: 텍스트 배경 그라데이션 색상 선택 탭 -->
+            <div class="group">
+                <span class="group-label">텍스트 배경 그라데이션 색상</span>
+                <div class="swatch-row">
+                    <div class="swatch active" style="background:#000000" data-grc="#000000"></div>
+                    <div class="swatch" style="background:#111122" data-grc="#111122"></div>
+                    <div class="swatch" style="background:#221111" data-grc="#221111"></div>
+                    <div class="swatch" style="background:#112211" data-grc="#112211"></div>
+                    <div class="swatch-custom"><span>+</span><input type="color" id="grcColorCustom" value="#000000"></div>
                 </div>
             </div>
 
@@ -687,9 +715,9 @@ document.addEventListener('mousedown', e => {
 
 
 // 3️⃣ SIDEBAR LOGIC
-document.querySelectorAll('.tab-btn').forEach(btn=>{
+document.querySelectorAll('.tab-nav .tab-btn').forEach(btn=>{
     btn.addEventListener('click', ()=>{
-        document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+        document.querySelectorAll('.tab-nav .tab-btn').forEach(b=>b.classList.remove('active'));
         document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
         btn.classList.add('active'); $('tab-'+btn.dataset.tab).classList.add('active');
     });
@@ -799,7 +827,7 @@ document.querySelectorAll('#spineSwatches .swatch').forEach(sw=>{
 $('spineColorCustom').addEventListener('input', e=>{ S.spineColor=e.target.value; $('bookSpine').style.backgroundColor=S.spineColor; });
 $('bookSpine').style.backgroundColor = S.spineColor;
 
-document.querySelectorAll('.toggle-row').forEach(row=>{
+document.querySelectorAll('.toggle-list .toggle-row').forEach(row=>{
     row.addEventListener('click', ()=>{const id=row.dataset.toggle; const el=$(id); el.classList.toggle('on'); handleToggle(id, el.classList.contains('on'));});
 });
 
@@ -822,7 +850,14 @@ function handleToggle(id,v){
         document.querySelectorAll('.deco-group').forEach(o=>o.classList.toggle('visible',v));
     }
     else if(id==='toggleShadow'){S.shadow=v; document.querySelectorAll('.cover-text-overlay').forEach(el=>el.classList.toggle('has-shadow',v));}
-    else if(id==='toggleGradBg'){S.gradBg=v; document.querySelectorAll('.cover-text-overlay').forEach(o=>{ o.style.background=v?'linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 70%)':''; });}
+    else if(id==='toggleGradBg'){S.gradBg=v; updateGradBgEffect();}
+}
+
+/* 그라데이션 배경 제어 함수 */
+function updateGradBgEffect() {
+    document.querySelectorAll('.cover-text-overlay').forEach(o=>{ 
+        o.style.background=S.gradBg ? `linear-gradient(to top, var(--grad-color) 0%, transparent 70%)` : ''; 
+    });
 }
 
 
@@ -907,11 +942,35 @@ $('tcColorCustom').addEventListener('input', e=>{document.querySelectorAll('[dat
 function setTextColor(c) {
     if(activeTextElement) {
         activeTextElement.style.color = c;
-        activeTextElement.style.textShadow = 'none';
     } else {
-        document.querySelectorAll('.text-drag').forEach(el=>{ el.style.color=c; el.style.textShadow='none'; }); 
+        document.querySelectorAll('.text-drag').forEach(el=>{ el.style.color=c; }); 
     }
 } 
+
+/* 외부광선 및 그라데이션 컬러 트리거 스크립트 */
+document.querySelectorAll('[data-gc]').forEach(sw=>{ sw.addEventListener('click', ()=>{document.querySelectorAll('[data-gc]').forEach(s=>s.classList.remove('active')); sw.classList.add('active'); setGlowColor(sw.dataset.gc);}); });
+$('gcColorCustom').addEventListener('input', e=>{document.querySelectorAll('[data-gc]').forEach(s=>s.classList.remove('active')); setGlowColor(e.target.value);});
+
+function setGlowColor(c) {
+    document.documentElement.style.setProperty('--glow-color', c);
+}
+
+document.querySelectorAll('[data-grc]').forEach(sw=>{ sw.addEventListener('click', ()=>{document.querySelectorAll('[data-grc]').forEach(s=>s.classList.remove('active')); sw.classList.add('active'); setGradColor(sw.dataset.grc);}); });
+$('grcColorCustom').addEventListener('input', e=>{document.querySelectorAll('[data-grc]').forEach(s=>s.classList.remove('active')); setGradColor(e.target.value);});
+
+function setGradColor(c) {
+    const rgbaColor = c.startsWith('#') ? hexToRgba(c, 0.85) : c;
+    document.documentElement.style.setProperty('--grad-color', rgbaColor);
+    if(S.gradBg) updateGradBgEffect();
+}
+
+function hexToRgba(hex, alpha) {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
 
 // 3D TILT 모션 
 $('mainView').addEventListener('mousemove', e=>{
@@ -949,6 +1008,10 @@ $('saveBtn').addEventListener('click', async ()=>{
     try {
         // 고화질 저장: 4배율 (약 3440 x 2160 해상도)
         const exportScale = 4; 
+
+        // 현재 선택된 커스텀 컬러 스타일 추출 후 변수 삽입용 처리
+        const currentGlow = getComputedStyle(document.documentElement).getPropertyValue('--glow-color');
+        const currentGrad = getComputedStyle(document.documentElement).getPropertyValue('--grad-color');
 
         // html2canvas 실행 대상을 capture-area(ca)로 변경
         const c = await html2canvas(ca, {
@@ -1012,9 +1075,13 @@ $('saveBtn').addEventListener('click', async ()=>{
                     });
                 }
                 
-                // 폰트 렌더링 및 안티앨리어싱 최적화 CSS 강제 주입
+                // 폰트 렌더링 및 안티앨리어싱 최적화 CSS 강제 주입 (+ 커스텀 변수 보존)
                 const s = clonedDoc.createElement('style');
                 s.textContent=`
+                    :root {
+                        --glow-color: ${currentGlow};
+                        --grad-color: ${currentGrad};
+                    }
                     *, *::before, *::after { transition: none !important; animation: none !important; }
                     .main-view { background: transparent !important; }
                     body { background: transparent !important; margin: 0; padding: 0; }
