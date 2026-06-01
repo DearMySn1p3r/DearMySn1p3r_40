@@ -16,7 +16,6 @@
             --bg:#f5f5f7; --surface:#ffffff; --surface-alt:#fafafb;
             --border:#e5e5e8; --border-hover:#cfcfd4;
             --text:#111111; --text-sub:#55555d; --text-muted:#9999a1; --ink:#000000; --accent:#000000;
-            /* 외부광선 및 그라데이션 커스텀 변수 추가 */
             --glow-color: rgba(0,0,0,0.4);
             --grad-color: rgba(0,0,0,0.85);
         }
@@ -120,7 +119,9 @@
         body.exporting *, body.exporting *::before, body.exporting *::after { transition: none !important; animation: none !important; }
         body.exporting .main-view { background: transparent !important; }
         body.exporting #tiltWrap { transform: none !important; }
-        body.exporting [contenteditable="true"] { outline: none !important; background: transparent !important; border: none !important; cursor: default !important; }
+        body.exporting .text-drag[contenteditable="true"] { outline: none !important; background: transparent !important; border: none !important; cursor: default !important; }
+        body.exporting .wn-tag { background: rgba(0,0,0,0.6) !important; border: 1px solid rgba(255,255,255,0.15) !important; border-radius: 12px !important; display: inline-flex !important; align-items: center !important; line-height: 1.2 !important; padding: 4px 9px !important; }
+        body.exporting .capture-area.theme-black .wn-tag { background: rgba(255,255,255,0.8) !important; border: 1px solid rgba(0,0,0,0.1) !important; color: #111 !important; }
 
         /* 공통 커버 속성 */
         .draggable-cover { position:relative; overflow:hidden; background-color:#1a1a1a; cursor:default; user-select:none; -webkit-user-select:none; }
@@ -153,7 +154,7 @@
         .dyn-author { font-size:11px; font-weight:500; color:white; letter-spacing:2px; margin-bottom:8px; text-transform: uppercase; text-align:center; width: auto; }
         .dyn-title { font-size:36px; font-weight:700; color:white; line-height:1.15; letter-spacing:-0.03em; text-align:center; width: auto; }
         
-        /* 외부광선 효과 입체 구현을 위해 var(--glow-color) 기반으로 커스텀 매핑 */
+        /* 외부광선 효과 */
         .has-shadow .text-drag { text-shadow: 0 2px 10px var(--glow-color), 0 0 5px var(--glow-color); }
         .has-shadow .dyn-title { text-shadow: 0 4px 15px var(--glow-color), 0 0 10px var(--glow-color); }
 
@@ -198,7 +199,7 @@
         /* ── 2. MAGAZINE (잡지) ──────────── */
         .mockup-magazine { display:none; position:relative; width:310px; height:420px; }
         .magazine-front { position:absolute; inset:0; box-shadow: -5px 10px 30px rgba(0,0,0,0.15), inset 2px 0 8px rgba(255,255,255,0.2); z-index:2; border-radius: 0; }
-        .magazine-front::after { content:'closest'?'':position:absolute; left:0; top:0; bottom:0; width:12px; background:linear-gradient(to right, rgba(0,0,0,0.2) 0%, transparent 100%); z-index:6; pointer-events:none; }
+        .magazine-front::after { content:''; position:absolute; left:0; top:0; bottom:0; width:12px; background:linear-gradient(to right, rgba(0,0,0,0.2) 0%, transparent 100%); z-index:6; pointer-events:none; }
         
         .mag-masthead { top:26px; font-family:'Playfair Display', serif; font-size:38px; font-weight:900; color:white; line-height:1; z-index:11; text-shadow: 0 4px 15px rgba(0,0,0,0.3); letter-spacing:-0.5px; white-space:nowrap; --scale-y: 1.35; }
         .mag-side-text { position:absolute; top:28px; left:8px; font-size:6px; font-weight:700; color:rgba(255,255,255,0.8); letter-spacing:2px; z-index:11; white-space:nowrap; writing-mode: vertical-rl; --base-rot: 180deg; transform: rotate(180deg); }
@@ -226,14 +227,16 @@
         .mockup-movie .dyn-title { font-family: 'Oswald', 'Anton', sans-serif !important; font-weight: 900; text-transform: uppercase; line-height: 1; letter-spacing: -0.02em; font-size:38px; --scale-y: 1.15; margin-bottom:12px; }
         .mockup-movie .dyn-author { font-size:8px; letter-spacing: 3px; opacity:0.8; font-weight:600; }
         
-        .movie-credits-block { bottom:18px; z-index:12; display:flex; flex-direction:column; align-items:center; width: 90%; }
-        .mc-cast { font-family:'Inter', sans-serif; font-size:5.5px; font-weight:800; color:rgba(255,255,255,0.9); margin-bottom:6px; letter-spacing:1px; word-spacing:2px; text-align:center; }
-        .mc-crew { font-family:'Inter', sans-serif; font-size:4px; font-weight:400; color:rgba(255,255,255,0.6); text-transform:uppercase; letter-spacing:0.5px; line-height:1.6; text-align:center; }
+        /* 💡 영화 크레딧: 기본 중앙정렬. 하지만 !important를 빼서 JS 정렬버튼에 연동되게 수정 */
+        .movie-credits-block { bottom:18px; z-index:12; display:flex; flex-direction:column; width: 90%; }
+        .mc-cast { font-family:'Inter', sans-serif; font-size:5.5px; font-weight:800; color:rgba(255,255,255,0.9); margin-bottom:6px; letter-spacing:1px; word-spacing:2px; text-align:center; width: 100%; display: block; }
+        .mc-crew { font-family:'Inter', sans-serif; font-size:4px; font-weight:400; color:rgba(255,255,255,0.6); text-transform:uppercase; letter-spacing:0.5px; line-height:1.6; text-align:center; width: 100%; display: block; }
 
         /* ── 4. WEB NOVEL (웹소설) ─── */
+        /* 💡 폰 모양 오리지널 CSS 완벽 복구 (모양 안 깨짐) */
         .mockup-device { display:none; position:relative; width:220px; height:440px; }
-        .device-frame { position:absolute; inset:0; background:#111; border-radius:32px; border: 6px solid #1a1a1c; box-shadow: 0 25px 45px rgba(0,0,0,0.25), inset 0 0 0 1px #333; z-index:2; }
-        .device-screen { position:absolute; inset:4px; border-radius:24px; z-index:3; overflow:hidden; }
+        .device-frame { position:absolute; inset:0; background:#111; border-radius:32px; border: 6px solid #1a1a1c; box-shadow: 0 25px 45px rgba(0,0,0,0.25), inset 0 0 0 1px #333; z-index:2; overflow:hidden; }
+        .device-screen { position:absolute; inset:4px; border-radius:28px; z-index:3; overflow:hidden; }
         .device-notch { position:absolute; top:4px; left:50%; transform:translateX(-50%); width:64px; height:16px; background:#111; border-radius:0 0 10px 10px; z-index:20; }
         
         .app-ui-top { position:absolute; top:0; left:0; right:0; height:80px; z-index:20; background:linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, transparent 100%); padding:12px 16px; display:flex; flex-direction:column; pointer-events:none; }
@@ -247,7 +250,7 @@
         
         .wn-stats { display:flex; gap:8px; margin-bottom:12px; justify-content: flex-start !important; align-items:center;}
         .wn-tags { display:flex; gap:6px; flex-wrap:wrap; justify-content: flex-start !important; }
-        .wn-tag { background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); border:1px solid rgba(255,255,255,0.15); color:white; font-size:8px; padding:5px 9px; border-radius:12px; font-weight:500; }
+        .wn-tag { background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); border:1px solid rgba(255,255,255,0.15); color:white; font-size:8px; padding:4px 9px; border-radius:12px; font-weight:500; display:inline-flex; align-items:center; line-height:1.2; }
         
         .capture-area.theme-black .app-ui-top { background:linear-gradient(to bottom, rgba(255,255,255,0.8) 0%, transparent 100%); }
         .capture-area.theme-black .app-back-btn { color: #111; text-shadow:none;}
@@ -413,7 +416,6 @@
                 </div>
             </div>
 
-            <!-- 신규 추가: 글자 외부광선 색상 선택 탭 -->
             <div class="group">
                 <span class="group-label">외부광선 (그림자) 색상</span>
                 <div class="swatch-row">
@@ -425,7 +427,6 @@
                 </div>
             </div>
 
-            <!-- 신규 추가: 텍스트 배경 그라데이션 색상 선택 탭 -->
             <div class="group">
                 <span class="group-label">텍스트 배경 그라데이션 색상</span>
                 <div class="swatch-row">
@@ -893,7 +894,8 @@ document.querySelectorAll('#alignPills .pill').forEach(btn => {
             }
             activeTextElement.style.alignSelf = flexAlign;
         } else {
-            document.querySelectorAll('.dyn-title, .dyn-author, .mag-masthead, .mc-cast, .mc-crew, .mag-blurb, .book-publisher-logo, .mag-issue-info').forEach(el => {
+            // 💡 영화 크레딧 (mc-cast, mc-crew) 정렬 버튼 연동 완료
+            document.querySelectorAll('.dyn-title, .dyn-author, .mag-masthead, .mag-blurb, .book-publisher-logo, .mag-issue-info, .mc-cast, .mc-crew').forEach(el => {
                 el.style.textAlign = align;
                 el.style.alignSelf = flexAlign;
             });
@@ -952,7 +954,8 @@ document.querySelectorAll('[data-gc]').forEach(sw=>{ sw.addEventListener('click'
 $('gcColorCustom').addEventListener('input', e=>{document.querySelectorAll('[data-gc]').forEach(s=>s.classList.remove('active')); setGlowColor(e.target.value);});
 
 function setGlowColor(c) {
-    document.documentElement.style.setProperty('--glow-color', c);
+    const rgbaColor = c.startsWith('#') ? hexToRgba(c, 0.4) : c;
+    document.documentElement.style.setProperty('--glow-color', rgbaColor);
 }
 
 document.querySelectorAll('[data-grc]').forEach(sw=>{ sw.addEventListener('click', ()=>{document.querySelectorAll('[data-grc]').forEach(s=>s.classList.remove('active')); sw.classList.add('active'); setGradColor(sw.dataset.grc);}); });
@@ -961,7 +964,13 @@ $('grcColorCustom').addEventListener('input', e=>{document.querySelectorAll('[da
 function setGradColor(c) {
     const rgbaColor = c.startsWith('#') ? hexToRgba(c, 0.85) : c;
     document.documentElement.style.setProperty('--grad-color', rgbaColor);
-    if(S.gradBg) updateGradBgEffect();
+    
+    if(!S.gradBg) {
+        S.gradBg = true;
+        const toggleEl = document.getElementById('toggleGradBg');
+        if(toggleEl) toggleEl.classList.add('on');
+    }
+    updateGradBgEffect();
 }
 
 function hexToRgba(hex, alpha) {
@@ -984,135 +993,212 @@ $('mainView').addEventListener('mousemove', e=>{
 $('mainView').addEventListener('mouseleave', ()=>{ $('tiltWrap').style.transform=''; if(S.mode==='book')$('bookWrapper').style.transform='rotateY(-6deg)';});
 
 
-// 💡 EXPORT – capture-area 직접 캡처 및 overflow:visible 처리
-$('saveBtn').addEventListener('click', async ()=>{
-    if (document.activeElement instanceof HTMLElement) {
-        document.activeElement.blur();
-    }
-    
-    // 타겟을 capture-area로 직접 지정
-    const ca = $('capture-area');
+// 💡 EXPORT – 유저 요청사항 반영 완료: 모양 보존 + 1px 안쪽 밀어넣기
+$('saveBtn').addEventListener('click', async () => {
+    if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+
+    const ca  = $('capture-area');
     const btn = $('saveBtn');
     document.body.classList.add('exporting');
-    
-    btn.textContent='고화질 렌더링 중...'; 
-    btn.disabled=true;
-    
-    // 목업의 그림자가 잘리지 않도록 임시로 overflow: visible 속성 부여
+    btn.textContent = '고화질 렌더링 중...';
+    btn.disabled = true;
+
     const originalOverflow = ca.style.overflow;
     ca.style.overflow = 'visible';
 
-    // CSS 적용 대기
-    await new Promise(r => setTimeout(r, 150)); 
-
     try {
-        // 고화질 저장: 4배율 (약 3440 x 2160 해상도)
-        const exportScale = 4; 
+        await document.fonts.ready;
+        await new Promise(r => setTimeout(r, 200));
 
-        // 현재 선택된 커스텀 컬러 스타일 추출 후 변수 삽입용 처리
-        const currentGlow = getComputedStyle(document.documentElement).getPropertyValue('--glow-color');
-        const currentGrad = getComputedStyle(document.documentElement).getPropertyValue('--grad-color');
+        const tiltWrap  = $('tiltWrap');
+        const bookWrap  = $('bookWrapper');
+        const savedTilt = tiltWrap.style.transform;
+        const savedBook = bookWrap ? bookWrap.style.transform : '';
 
-        // html2canvas 실행 대상을 capture-area(ca)로 변경
-        const c = await html2canvas(ca, {
-            scale: exportScale,
+        tiltWrap.style.transform = 'none';
+        if (bookWrap) bookWrap.style.transform = 'none';
+        await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+
+        const textDrags     = [...ca.querySelectorAll('.text-drag')];
+        const concreteTX    = textDrags.map(el => window.getComputedStyle(el).transform || 'none');
+
+        const rootCS  = getComputedStyle(document.documentElement);
+        const glowVal = rootCS.getPropertyValue('--glow-color').trim() || 'rgba(0,0,0,0.4)';
+        const gradVal = rootCS.getPropertyValue('--grad-color').trim() || 'rgba(0,0,0,0.85)';
+        const isThemeBlack = ca.classList.contains('theme-black');
+
+        const overlayEls   = [...ca.querySelectorAll('.cover-text-overlay')];
+        const overlayBgMap = overlayEls.map(el => {
+            const bg = el.style.background || '';
+            return bg.replace(/var\(--grad-color\)/g, gradVal);
+        });
+
+        const bgLayoutDims = {};
+        BGS.forEach(id => {
+            const el = $(id);
+            if (el && el.offsetWidth > 0) {
+                bgLayoutDims[id] = { w: el.offsetWidth, h: el.offsetHeight };
+            }
+        });
+
+        tiltWrap.style.transform = savedTilt;
+        if (bookWrap) bookWrap.style.transform = savedBook;
+
+        let imgNaturalW = 0, imgNaturalH = 0;
+        if (S.imageUrl) {
+            await new Promise(res => {
+                const img = new Image();
+                img.onload = () => { imgNaturalW = img.naturalWidth; imgNaturalH = img.naturalHeight; res(); };
+                img.onerror = res;
+                img.src = S.imageUrl;
+            });
+        }
+
+        const SCALE = 4;
+        const canvas = await html2canvas(ca, {
+            scale: SCALE,
             useCORS: true,
-            allowTaint: false, 
+            allowTaint: false,
             backgroundColor: S.bgColor,
             logging: false,
             removeContainer: true,
             imageTimeout: 0,
-            onclone: (clonedDoc) => {
+            onclone: (clonedDoc, clonedEl) => {
                 clonedDoc.body.classList.add('exporting');
-                if(S.mode === 'book') clonedDoc.getElementById('bookWrapper').style.transform = 'rotateY(-6deg)';
+
+                const clTilt = clonedDoc.getElementById('tiltWrap');
+                const clBook = clonedDoc.getElementById('bookWrapper');
+                if (clTilt) clTilt.style.setProperty('transform', 'none', 'important');
+                if (clBook) clBook.style.setProperty('transform', 'none', 'important');
+                clonedDoc.querySelectorAll('#capture-area .book-spine, #capture-area .book-pages')
+                    .forEach(el => { el.style.display = 'none'; });
+
+                // 💡 유저 요청 완벽 적용: 폰모양 원래대로 유지 + 캡처 시에만 1px 안쪽으로 밀어넣기
+                clonedDoc.querySelectorAll('#capture-area .device-frame').forEach(el => {
+                    el.style.setProperty('box-shadow', 'none', 'important'); // 바깥 이상한 선 유발하는 그림자 제거
+                    // 테두리를 1px 안으로 수축시켜서 html2canvas 렌더링 찌꺼기를 숨김!
+                    el.style.setProperty('inset', '1px', 'important'); 
+                });
                 
-                // clone된 capture-area에서도 동일하게 설정 및 자체 외곽선/그림자 제거
-                const caClone = clonedDoc.getElementById('capture-area');
-                if(caClone) {
-                    caClone.style.overflow = 'visible';
-                    caClone.style.boxShadow = 'none';
-                    caClone.style.borderRadius = '0';
-                }
+                clonedDoc.querySelectorAll('#capture-area .device-screen').forEach(el => {
+                    // 기기 내부 스크린과 테두리 사이의 선을 덮기 위해 1px 팽창시켜 겹치게 함 (inset 4px -> 3px)
+                    el.style.setProperty('inset', '3px', 'important');
+                });
+
+                clonedDoc.querySelectorAll('#capture-area .device-notch').forEach(el => {
+                    el.style.setProperty('display', 'none', 'important'); 
+                });
                 
-                // background-image → <img> 태그로 교체하여 고화질 유지
-                if(S.imageUrl) {
-                    clonedDoc.querySelectorAll('.cover-bg').forEach(bgEl => {
+                clonedDoc.querySelectorAll('#capture-area .wn-tag').forEach(el => {
+                    el.style.setProperty('backdrop-filter', 'none', 'important');
+                    el.style.setProperty('-webkit-backdrop-filter', 'none', 'important');
+                });
+
+                clonedEl.style.overflow     = 'visible';
+                clonedEl.style.boxShadow    = 'none';
+                clonedEl.style.borderRadius = '0';
+
+                const clDrags = [...clonedDoc.querySelectorAll('#capture-area .text-drag')];
+                clDrags.forEach((el, i) => {
+                    el.style.setProperty('--tx',       '0px');
+                    el.style.setProperty('--ty',       '0px');
+                    el.style.setProperty('--base-tx',  '0px');
+                    el.style.setProperty('--base-ty',  '0px');
+                    el.style.setProperty('--base-rot', '0deg');
+                    el.style.setProperty('--scale-y',  '1');
+                    el.style.setProperty('transform', concreteTX[i] || 'none', 'important');
+
+                    const inShadow = !!el.closest('.has-shadow');
+                    if (inShadow) {
+                        const isDynTitle = el.classList.contains('dyn-title');
+                        let shadow;
+                        if (isThemeBlack) {
+                            shadow = isDynTitle
+                                ? `0 4px 20px ${glowVal}`
+                                : `0 2px 10px ${glowVal}`;
+                        } else {
+                            shadow = isDynTitle
+                                ? `0 4px 15px ${glowVal}, 0 0 10px ${glowVal}`
+                                : `0 2px 10px ${glowVal}, 0 0 5px ${glowVal}`;
+                        }
+                        el.style.setProperty('text-shadow', shadow, 'important');
+                    } else {
+                        el.style.removeProperty('text-shadow');
+                    }
+                });
+
+                if (S.imageUrl && imgNaturalW && imgNaturalH) {
+                    const bgPosMap = {
+                        'bg-coverBook':   bgPos['bg-coverBook']   || {x:50, y:50},
+                        'bg-coverMag':    bgPos['bg-coverMag']    || {x:50, y:50},
+                        'bg-coverMovie':  bgPos['bg-coverMovie']  || {x:50, y:50},
+                        'bg-coverDevice': bgPos['bg-coverDevice'] || {x:50, y:50},
+                    };
+                    clonedDoc.querySelectorAll('#capture-area .cover-bg').forEach(bgEl => {
+                        const dims = bgLayoutDims[bgEl.id];
+                        if (!dims) return; 
+                        const isSpine = bgEl.classList.contains('spine-bg-layer');
+                        const p = isSpine ? {x:0, y:50} : (bgPosMap[bgEl.id] || {x:50, y:50});
+                        const zoom = S.zoom / 100;
+
+                        const baseScale = Math.max(dims.w / imgNaturalW, dims.h / imgNaturalH);
+                        const scale = baseScale * zoom;
+                        const renderW = Math.ceil(imgNaturalW * scale) + 2; 
+                        const renderH = Math.ceil(imgNaturalH * scale) + 2;
+                        const offsetX = -Math.floor((renderW - dims.w) * p.x / 100) - 1;
+                        const offsetY = -Math.floor((renderH - dims.h) * p.y / 100) - 1;
+
+                        bgEl.style.setProperty('transform', 'none', 'important');
+                        bgEl.style.backgroundImage = 'none';
+                        bgEl.style.overflow = 'hidden';
+
                         const img = clonedDoc.createElement('img');
                         img.src = S.imageUrl;
-                        img.style.cssText = `
-                            position: absolute;
-                            inset: 0;
-                            width: 100%;
-                            height: 100%;
-                            object-fit: cover;
-                            object-position: ${bgEl.style.backgroundPosition || '50% 50%'};
-                            transform: ${bgEl.style.transform || 'scale(1)'};
-                            filter: ${bgEl.style.filter || 'brightness(1)'};
-                            image-rendering: high-quality;
-                            pointer-events: none;
-                        `;
-                        bgEl.style.backgroundImage = 'none';
-                        bgEl.appendChild(img);
-                    });
-                    // 척추(spine) 배경 레이어도 처리
-                    clonedDoc.querySelectorAll('.spine-bg-layer').forEach(bgEl => {
-                        const img = clonedDoc.createElement('img');
-                        img.src = S.imageUrl;
-                        img.style.cssText = `
-                            position: absolute;
-                            inset: 0;
-                            width: 100%;
-                            height: 100%;
-                            object-fit: cover;
-                            object-position: left center;
-                            opacity: 0.3;
-                            filter: blur(2px) grayscale(50%);
-                            image-rendering: high-quality;
-                            pointer-events: none;
-                        `;
-                        bgEl.style.backgroundImage = 'none';
-                        bgEl.appendChild(img);
+                        img.style.cssText =
+                            'position:absolute;' +
+                            'top:' + offsetY + 'px;left:' + offsetX + 'px;' +
+                            'width:' + renderW + 'px;height:' + renderH + 'px;' +
+                            'max-width:none;max-height:none;' +
+                            (isSpine ? 'opacity:0.3;filter:blur(2px) grayscale(50%);' : '') +
+                            'display:block;pointer-events:none;';
+                        bgEl.insertBefore(img, bgEl.firstChild);
                     });
                 }
-                
-                // 폰트 렌더링 및 안티앨리어싱 최적화 CSS 강제 주입 (+ 커스텀 변수 보존)
+
+                clonedDoc.querySelectorAll('#capture-area .cover-text-overlay').forEach((el, i) => {
+                    if (overlayBgMap[i] !== undefined) {
+                        el.style.setProperty('background', overlayBgMap[i] || 'none', 'important');
+                    }
+                });
+
                 const s = clonedDoc.createElement('style');
-                s.textContent=`
-                    :root {
-                        --glow-color: ${currentGlow};
-                        --grad-color: ${currentGrad};
-                    }
+                s.textContent = `
+                    :root { --glow-color: ${glowVal}; --grad-color: ${gradVal}; }
                     *, *::before, *::after { transition: none !important; animation: none !important; }
-                    .main-view { background: transparent !important; }
                     body { background: transparent !important; margin: 0; padding: 0; }
-                    #tiltWrap { transform: none !important; }
-                    [contenteditable="true"] { outline: none !important; background: transparent !important; border: none !important; cursor: default !important; }
-                    
-                    .cover-bg { image-rendering: high-quality !important; }
-                    .text-drag, .dyn-title, .dyn-author, .spine-text, .mag-masthead {
-                        text-rendering: geometricPrecision !important;
-                        -webkit-font-smoothing: antialiased !important;
-                        transform-style: preserve-3d !important;
-                    }
+                    .main-view { background: transparent !important; }
+                    .text-drag[contenteditable="true"] { outline: none !important; background: transparent !important; border: none !important; }
+                    .wn-tag { background: rgba(0,0,0,0.6) !important; border: 1px solid rgba(255,255,255,0.15) !important; border-radius: 12px !important; display: inline-flex !important; align-items: center !important; line-height: 1.2 !important; padding: 4px 9px !important; }
+                    .text-drag { text-rendering: geometricPrecision !important; -webkit-font-smoothing: antialiased !important; }
                 `;
                 clonedDoc.head.appendChild(s);
             }
         });
-        
-        const link = document.createElement('a'); 
-        link.download = `CoverStudio_HQ_${Date.now()}.png`; 
-        link.href = c.toDataURL('image/png', 1.0); 
+
+        const link = document.createElement('a');
+        link.download = `CoverStudio_HQ_${Date.now()}.png`;
+        link.href = canvas.toDataURL('image/png', 1.0);
         link.click();
         showToast('고화질 저장 완료! 🎉');
+
     } catch (err) {
-        console.error(err); 
+        console.error(err);
         showToast('저장 실패');
     } finally {
-        // 원상 복구
         ca.style.overflow = originalOverflow;
-        document.body.classList.remove('exporting'); 
-        btn.textContent='Export to PNG'; 
-        btn.disabled=false;
+        document.body.classList.remove('exporting');
+        btn.textContent = 'Export to PNG';
+        btn.disabled = false;
     }
 });
 
