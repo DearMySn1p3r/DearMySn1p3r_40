@@ -120,7 +120,9 @@
         body.exporting .main-view { background: transparent !important; }
         body.exporting #tiltWrap { transform: none !important; }
         body.exporting .text-drag[contenteditable="true"] { outline: none !important; background: transparent !important; border: none !important; cursor: default !important; }
-        body.exporting .wn-tag { background: rgba(0,0,0,0.6) !important; border: 1px solid rgba(255,255,255,0.15) !important; border-radius: 12px !important; display: inline-flex !important; align-items: center !important; line-height: 1.2 !important; padding: 4px 9px !important; }
+        
+        /* 💡 캡처 시에도 적용되도록 여백(padding) 수정 (top:3px, bottom:5px) */
+        body.exporting .wn-tag { background: rgba(0,0,0,0.6) !important; border: 1px solid rgba(255,255,255,0.15) !important; border-radius: 12px !important; display: inline-flex !important; align-items: center !important; line-height: 1.2 !important; padding: 3px 9px 5px !important; }
         body.exporting .capture-area.theme-black .wn-tag { background: rgba(255,255,255,0.8) !important; border: 1px solid rgba(0,0,0,0.1) !important; color: #111 !important; }
 
         /* 공통 커버 속성 */
@@ -227,13 +229,12 @@
         .mockup-movie .dyn-title { font-family: 'Oswald', 'Anton', sans-serif !important; font-weight: 900; text-transform: uppercase; line-height: 1; letter-spacing: -0.02em; font-size:38px; --scale-y: 1.15; margin-bottom:12px; }
         .mockup-movie .dyn-author { font-size:8px; letter-spacing: 3px; opacity:0.8; font-weight:600; }
         
-        /* 💡 영화 크레딧: 기본 중앙정렬. 하지만 !important를 빼서 JS 정렬버튼에 연동되게 수정 */
+        /* 영화 크레딧: JS 정렬 연동 */
         .movie-credits-block { bottom:18px; z-index:12; display:flex; flex-direction:column; width: 90%; }
         .mc-cast { font-family:'Inter', sans-serif; font-size:5.5px; font-weight:800; color:rgba(255,255,255,0.9); margin-bottom:6px; letter-spacing:1px; word-spacing:2px; text-align:center; width: 100%; display: block; }
         .mc-crew { font-family:'Inter', sans-serif; font-size:4px; font-weight:400; color:rgba(255,255,255,0.6); text-transform:uppercase; letter-spacing:0.5px; line-height:1.6; text-align:center; width: 100%; display: block; }
 
         /* ── 4. WEB NOVEL (웹소설) ─── */
-        /* 💡 폰 모양 오리지널 CSS 완벽 복구 (모양 안 깨짐) */
         .mockup-device { display:none; position:relative; width:220px; height:440px; }
         .device-frame { position:absolute; inset:0; background:#111; border-radius:32px; border: 6px solid #1a1a1c; box-shadow: 0 25px 45px rgba(0,0,0,0.25), inset 0 0 0 1px #333; z-index:2; overflow:hidden; }
         .device-screen { position:absolute; inset:4px; border-radius:28px; z-index:3; overflow:hidden; }
@@ -250,7 +251,9 @@
         
         .wn-stats { display:flex; gap:8px; margin-bottom:12px; justify-content: flex-start !important; align-items:center;}
         .wn-tags { display:flex; gap:6px; flex-wrap:wrap; justify-content: flex-start !important; }
-        .wn-tag { background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); border:1px solid rgba(255,255,255,0.15); color:white; font-size:8px; padding:4px 9px; border-radius:12px; font-weight:500; display:inline-flex; align-items:center; line-height:1.2; }
+        
+        /* 💡 텍스트가 1px 아래로 쏠리는 폰트 베이스라인 문제를 해결하기 위해 padding 비율 수정 (top:3px, bottom:5px) */
+        .wn-tag { background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); border:1px solid rgba(255,255,255,0.15); color:white; font-size:8px; padding:3px 9px 5px; border-radius:12px; font-weight:500; display:inline-flex; align-items:center; line-height:1.2; }
         
         .capture-area.theme-black .app-ui-top { background:linear-gradient(to bottom, rgba(255,255,255,0.8) 0%, transparent 100%); }
         .capture-area.theme-black .app-back-btn { color: #111; text-shadow:none;}
@@ -1178,7 +1181,7 @@ $('saveBtn').addEventListener('click', async () => {
                     body { background: transparent !important; margin: 0; padding: 0; }
                     .main-view { background: transparent !important; }
                     .text-drag[contenteditable="true"] { outline: none !important; background: transparent !important; border: none !important; }
-                    .wn-tag { background: rgba(0,0,0,0.6) !important; border: 1px solid rgba(255,255,255,0.15) !important; border-radius: 12px !important; display: inline-flex !important; align-items: center !important; line-height: 1.2 !important; padding: 4px 9px !important; }
+                    .wn-tag { background: rgba(0,0,0,0.6) !important; border: 1px solid rgba(255,255,255,0.15) !important; border-radius: 12px !important; display: inline-flex !important; align-items: center !important; line-height: 1.2 !important; padding: 3px 9px 5px !important; }
                     .text-drag { text-rendering: geometricPrecision !important; -webkit-font-smoothing: antialiased !important; }
                 `;
                 clonedDoc.head.appendChild(s);
