@@ -1,0 +1,1058 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cover Studio - Optimal HQ</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Oswald:wght@300;400;700;900&family=Bebas+Neue&family=Raleway:wght@300;400;700&family=Anton&family=Noto+Serif+KR:wght@200;300;400;700&family=Gowun+Dodum&family=Nanum+Myeongjo:wght@400;700;800&family=Inter:wght@300;400;500;600;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/[email protected]/dist/web/static/pretendard.min.css">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
+    <style>
+        :root {
+            --bg:#f5f5f7; --surface:#ffffff; --surface-alt:#fafafb;
+            --border:#e5e5e8; --border-hover:#cfcfd4;
+            --text:#111111; --text-sub:#55555d; --text-muted:#9999a1; --ink:#000000; --accent:#000000;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg); color: var(--text);
+            display: flex; height: 100vh; overflow: hidden;
+            font-weight: 400; -webkit-font-smoothing: antialiased; letter-spacing: -0.01em;
+        }
+
+        /* sidebar */
+        .sidebar { width:320px; min-width:320px; background:var(--surface); border-right:1px solid var(--border); display:flex; flex-direction:column; overflow:hidden; z-index:10; box-shadow: 1px 0 20px rgba(0,0,0,0.02); }
+        .sidebar-header { padding:28px 24px 20px; flex-shrink:0; }
+        .logo { font-family:'Inter', sans-serif; font-size:20px; font-weight:800; letter-spacing:-0.5px; color:var(--ink); line-height:1; margin-bottom:6px; text-transform:uppercase; }
+        .tagline { font-size:11px; color:var(--text-muted); font-weight:500; letter-spacing: 0.5px; }
+        .tab-nav { display:flex; padding:0 24px; border-bottom:1px solid var(--border); flex-shrink:0; }
+        .tab-btn { padding:12px 0; margin-right:24px; background:none; border:none; color:var(--text-muted); font-family:inherit; font-size:13px; font-weight:600; cursor:pointer; position:relative; transition:color 0.2s; }
+        .tab-btn:hover { color:var(--text-sub); }
+        .tab-btn.active { color:var(--ink); font-weight:700; }
+        .tab-btn.active::after { content:''; position:absolute; bottom:-1px; left:0; right:0; height:2px; background:var(--ink); }
+        .sidebar-scroll { flex:1; overflow-y:auto; padding:24px; }
+        .sidebar-scroll::-webkit-scrollbar { width:4px; }
+        .sidebar-scroll::-webkit-scrollbar-track { background:transparent; }
+        .sidebar-scroll::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+        .tab-panel { display:none; flex-direction:column; gap:24px; }
+        .tab-panel.active { display:flex; }
+        .group { display:flex; flex-direction:column; gap:10px; }
+        .group-label { font-size:11px; font-weight:700; letter-spacing:0.5px; color:var(--text-muted); text-transform:uppercase; margin-bottom: 2px; }
+
+        /* upload */
+        .upload-zone { border:1px dashed var(--border-hover); border-radius:8px; padding:24px 16px; text-align:center; cursor:pointer; transition:all 0.2s; background:var(--surface-alt); display:block; }
+        .upload-zone:hover { border-color:var(--ink); background:var(--surface); }
+        .upload-zone.has-image { border-style:solid; border-color:var(--ink); background:var(--surface); }
+        .upload-text { font-size:13px; color:var(--text); font-weight:600; margin-bottom:4px; }
+        .upload-sub { font-size:11px; color:var(--text-muted); }
+        input[type="file"] { display:none; }
+
+        /* mode grid */
+        .mode-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+        .mode-btn { background:var(--surface); border:1px solid var(--border); border-radius:6px; padding:12px 8px; cursor:pointer; transition:all 0.15s; text-align:center; font-family:inherit; }
+        .mode-btn:hover { border-color:var(--border-hover); background:var(--surface-alt); }
+        .mode-btn.active { border-color:var(--ink); background:var(--ink); color:white; }
+        .mode-btn .mi { font-size:18px; margin-bottom:6px; }
+        .mode-btn .ml { font-size:11px; font-weight:600; color:inherit; }
+
+        /* pills & swatches */
+        .pill-row { display:flex; flex-wrap:wrap; gap:6px; }
+        .pill { padding:7px 12px; border-radius:4px; background:var(--surface); border:1px solid var(--border); font-size:11px; font-weight:600; color:var(--text-sub); cursor:pointer; transition:all 0.15s; white-space:nowrap; font-family:inherit; text-align:center; }
+        .pill:hover { border-color:var(--border-hover); color:var(--text); }
+        .pill.active { background:var(--ink); border-color:var(--ink); color:white; }
+
+        .swatch-row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+        .swatch { width:24px; height:24px; border-radius:4px; cursor:pointer; position:relative; transition:transform 0.1s; border:1px solid var(--border); flex-shrink:0; }
+        .swatch:hover { transform:scale(1.1); }
+        .swatch.active { transform:scale(1.1); border: 2px solid var(--ink); }
+        .swatch-custom { width:24px; height:24px; border-radius:4px; border:1px dashed var(--border-hover); cursor:pointer; position:relative; display:flex; align-items:center; justify-content:center; font-size:12px; color:var(--text-muted); background:var(--surface); transition:all 0.15s; flex-shrink:0; }
+        .swatch-custom:hover { border-color:var(--ink); color:var(--ink); }
+        .swatch-custom input { position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%; }
+
+        .text-input { width:100%; background:var(--surface); border:1px solid var(--border); border-radius:6px; padding:10px 12px; color:var(--text); font-family:inherit; font-size:13px; font-weight:500; outline:none; transition:border-color 0.15s; }
+        .text-input:focus { border-color:var(--ink); }
+        .text-input::placeholder { color:var(--text-muted); font-weight:400; }
+        select.text-input { cursor:pointer; -webkit-appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='none'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%239999a1' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 12px center; padding-right:30px; }
+
+        .slider-wrap { display:flex; align-items:center; gap:12px; }
+        input[type="range"] { flex:1; -webkit-appearance:none; height:2px; background:var(--border); border-radius:2px; outline:none; }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance:none; width:14px; height:14px; background:var(--ink); border-radius:50%; cursor:pointer; transition:transform 0.1s; }
+        input[type="range"]::-webkit-slider-thumb:hover { transform:scale(1.2); }
+        .slider-val { font-size:11px; color:var(--text-sub); font-weight:600; min-width:32px; text-align:right; font-variant-numeric: tabular-nums; }
+
+        .toggle-list { display:flex; flex-direction:column; gap:12px; }
+        .toggle-row { display:flex; align-items:center; justify-content:space-between; cursor:pointer; padding:2px 0; }
+        .toggle-name { font-size:13px; color:var(--text); font-weight:500; }
+        .toggle { width:32px; height:18px; background:var(--border); border-radius:10px; position:relative; cursor:pointer; transition:background 0.2s; flex-shrink:0; }
+        .toggle.on { background:var(--ink); }
+        .toggle::after { content:''; position:absolute; top:2px; left:2px; width:14px; height:14px; background:white; border-radius:50%; transition:transform 0.2s; box-shadow:0 1px 2px rgba(0,0,0,0.1); }
+        .toggle.on::after { transform:translateX(14px); }
+
+        .sidebar-footer { padding:16px 24px 24px; border-top:1px solid var(--border); flex-shrink:0; background: var(--surface); }
+        .save-btn { width:100%; padding:14px; background:var(--ink); border:none; border-radius:6px; color:white; font-family:inherit; font-size:14px; font-weight:600; letter-spacing:0.5px; cursor:pointer; transition:all 0.15s; }
+        .save-btn:hover:not(:disabled) { background:#222; }
+        .save-btn:active:not(:disabled) { transform:scale(0.98); }
+        .save-btn:disabled { opacity:0.6; cursor:not-allowed; }
+
+        /* ── MAIN VIEW ───────────────── */
+        .main-view { flex:1; display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden; background: #e9e9eb; }
+        
+        #export-wrap { 
+            padding: 80px; 
+            background: transparent; 
+            display: flex; align-items: center; justify-content: center; 
+        }
+
+        #capture-area { position:relative; width:860px; height:540px; display:flex; align-items:center; justify-content:center; overflow:hidden; border-radius:2px; box-shadow: 0 40px 100px rgba(0,0,0,0.08), 0 10px 40px rgba(0,0,0,0.04); transition: background 0.3s; background: #e9e9eb; }
+        #tiltWrap { transition: transform 0.15s ease-out; perspective: 1200px; display:flex; align-items:center; justify-content:center; width:100%; height:100%; }
+        
+        #noiseOverlay { position: absolute; inset: 0; z-index: 50; pointer-events: none; opacity: 0; transition: opacity 0.3s; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.12'/%3E%3C/svg%3E"); }
+        #noiseOverlay.visible { opacity: 1; }
+
+        body.exporting *, body.exporting *::before, body.exporting *::after { transition: none !important; animation: none !important; }
+        body.exporting .main-view { background: transparent !important; }
+        body.exporting #tiltWrap { transform: none !important; }
+        body.exporting [contenteditable="true"] { outline: none !important; background: transparent !important; border: none !important; cursor: default !important; }
+
+        /* 공통 커버 속성 */
+        .draggable-cover { position:relative; overflow:hidden; background-color:#1a1a1a; cursor:default; user-select:none; -webkit-user-select:none; }
+        .cover-bg { position:absolute; inset:0; width:100%; height:100%; background-position:50% 50%; background-size:cover; background-repeat:no-repeat; transform:scale(1); transition: filter 0.2s, transform 0.1s; }
+        .draggable-cover.has-image { cursor:grab; }
+        .draggable-cover.dragging { cursor:grabbing !important; }
+        
+        .cover-placeholder { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; color:rgba(255,255,255,0.3); text-align:center; z-index:2; pointer-events:none; transition:opacity 0.3s; }
+        .has-image .cover-placeholder { opacity:0; }
+        .ph-icon { font-size:20px; opacity:0.8; }
+        .ph-text { font-size:11px; font-weight:500; letter-spacing: 0.5px; }
+
+        /* 💡 PERFECT ALIGN DRAG SYSTEM */
+        .text-drag {
+            --tx: 0px; --ty: 0px; --base-tx: 0px; --base-ty: 0px; --base-rot: 0deg; --scale-y: 1;
+            transform: translate(calc(var(--base-tx) + var(--tx)), calc(var(--base-ty) + var(--ty))) rotate(var(--base-rot)) scaleY(var(--scale-y)) !important;
+            cursor: move; display: inline-block; pointer-events: auto; outline-offset: 4px; border-radius: 2px;
+            max-width: 100%; word-break: keep-all; box-sizing: border-box;
+        }
+        .text-drag:hover { outline: 1px dashed rgba(255,255,255,0.6); }
+        .text-drag:focus { outline: 1px solid rgba(255,255,255,1); background: rgba(0,0,0,0.15); cursor: text; }
+        .theme-black .text-drag:hover { outline: 1px dashed rgba(0,0,0,0.4); }
+        .theme-black .text-drag:focus { outline: 1px solid rgba(0,0,0,0.8); background: rgba(255,255,255,0.3); }
+
+        .center-x { position: absolute; left: 50%; --base-tx: -50%; } 
+        .spine-text { --base-rot: 90deg; }
+        .mag-side-text { --base-rot: 180deg; }
+
+        .cover-text-overlay { position:absolute; inset:0; z-index:10; padding:28px 20px; display:flex; flex-direction:column; justify-content:flex-end; align-items:center; pointer-events:none; transition:background 0.3s, opacity 0.3s; }
+        .dyn-author { font-size:11px; font-weight:500; color:white; letter-spacing:2px; margin-bottom:8px; text-transform: uppercase; text-align:center; width: auto; }
+        .dyn-title { font-size:36px; font-weight:700; color:white; line-height:1.15; letter-spacing:-0.03em; text-align:center; width: auto; }
+        
+        .has-shadow .text-drag { text-shadow: 0 2px 10px rgba(0,0,0,0.4); }
+        .has-shadow .dyn-title { text-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+
+        .deco-group { opacity: 0; transition: opacity 0.3s, color 0.3s; pointer-events: auto; }
+        .cover-text-overlay.visible, .deco-group.visible { opacity:1; }
+
+        .sheen-overlay { position:absolute; inset:0; background: linear-gradient(115deg, transparent 20%, rgba(255,255,255,0.05) 30%, rgba(255,255,255,0.1) 45%, transparent 55%); z-index:5; pointer-events:none; opacity:0; transition:opacity 0.3s; mix-blend-mode: screen; }
+        .has-sheen .sheen-overlay { opacity:1; }
+
+        /* 바코드 설정 */
+        .cover-barcode { position: absolute; bottom: 12px; right: 12px; width: 36px; height: 14px; background: white; padding: 2px; border-radius: 1px; z-index: 15; opacity: 0; transition: opacity 0.3s; box-shadow: 0 1px 3px rgba(0,0,0,0.15); pointer-events: none; }
+        .cover-barcode.visible { opacity: 1; }
+        .cover-barcode svg { width: 100%; height: 100%; display: block; }
+        .cover-barcode text { font-family: 'Inter', sans-serif; font-size: 4px; font-weight: 600; }
+
+        /* ── THEME: BLACK ── */
+        .theme-black .text-drag, .theme-black .dyn-author, .theme-black .dyn-title { color: #111; }
+        .theme-black.has-shadow .text-drag { text-shadow: 0 2px 10px rgba(255,255,255,0.6); }
+        .theme-black.has-shadow .dyn-title { text-shadow: 0 4px 20px rgba(255,255,255,0.8); }
+
+        /* ── 1. BOOK (책 표지) ────────────── */
+        .mockup-book { position:relative; width:280px; height:410px; transform-style:preserve-3d; display:flex; align-items:center; justify-content:center; }
+        .book-wrapper { position:relative; width:100%; height:100%; transform-style:preserve-3d; transform: rotateY(-6deg); transition: transform 0.4s ease; box-shadow: 12px 20px 35px rgba(0,0,0,0.2); border-radius:1px 4px 4px 1px; }
+        .book-front { position:absolute; inset:0; border-radius: 1px 4px 4px 1px; box-shadow: inset 3px 0 8px rgba(0,0,0,0.1), inset -1px 0 1px rgba(255,255,255,0.3); z-index:2; }
+        
+        .book-spine { position:absolute; left:0; top:0; width:30px; height:100%; background:#1a1a1a; transform-origin:left; transform:rotateY(-90deg); border-radius: 3px 0 0 3px; box-shadow: inset -2px 0 5px rgba(0,0,0,0.3), inset 2px 0 2px rgba(255,255,255,0.05); z-index:1; display:flex; align-items:center; justify-content:center; overflow:hidden; transition: background 0.3s; }
+        .spine-bg-layer { position:absolute; inset:0; width:100%; height:100%; background-position: left center; background-size: cover; opacity:0.3; filter: blur(2px) grayscale(50%); pointer-events: none;}
+        .spine-text { position:relative; z-index:2; color:rgba(255,255,255,0.8); font-size:10px; white-space:nowrap; letter-spacing:2px; font-weight:400; padding:4px; --base-rot: 90deg; }
+        .spine-rib { position:absolute; left:0; right:0; height:2px; background:rgba(0,0,0,0.15); box-shadow: 0 1px 1px rgba(255,255,255,0.1), inset 0 1px 2px rgba(0,0,0,0.4); z-index:2; pointer-events: none;}
+        
+        .book-pages { position:absolute; top:2px; bottom:2px; right:-12px; width:12px; background:repeating-linear-gradient(to bottom, #f9f9f9, #f9f9f9 1px, #e0e0e0 1px, #e0e0e0 2px); transform-origin:left; transform:rotateY(90deg); z-index:1; border-radius: 0 3px 3px 0; }
+        
+        .book-deco-frame { position:absolute; inset:16px; border:1px solid rgba(255,255,255,0.25); z-index:11; pointer-events:none; }
+        
+        .mockup-book .cover-text-overlay { justify-content: center !important; align-items: center !important; }
+        .mockup-book .dyn-title { font-family: 'Nanum Myeongjo', serif; font-weight: 400; letter-spacing: 0.1em; line-height: 1.4; padding:0; margin-bottom:12px; }
+        .mockup-book .dyn-author { font-weight: 300; font-size: 10px; letter-spacing: 0.3em; opacity: 0.8; text-transform:none; }
+        .book-publisher-logo { bottom:30px; font-size:8px; letter-spacing:4px; color:rgba(255,255,255,0.7); z-index:11; font-weight:600; text-align:center;}
+        
+        .capture-area.theme-black .book-deco-frame { border-color: rgba(0,0,0,0.2); }
+
+        /* ── 2. MAGAZINE (잡지) ──────────── */
+        .mockup-magazine { display:none; position:relative; width:310px; height:420px; }
+        .magazine-front { position:absolute; inset:0; box-shadow: -5px 10px 30px rgba(0,0,0,0.15), inset 2px 0 8px rgba(255,255,255,0.2); z-index:2; border-radius: 0; }
+        .magazine-front::after { content:'closest'?'':position:absolute; left:0; top:0; bottom:0; width:12px; background:linear-gradient(to right, rgba(0,0,0,0.2) 0%, transparent 100%); z-index:6; pointer-events:none; }
+        
+        .mag-masthead { top:26px; font-family:'Playfair Display', serif; font-size:38px; font-weight:900; color:white; line-height:1; z-index:11; text-shadow: 0 4px 15px rgba(0,0,0,0.3); letter-spacing:-0.5px; white-space:nowrap; --scale-y: 1.35; }
+        .mag-side-text { position:absolute; top:28px; left:8px; font-size:6px; font-weight:700; color:rgba(255,255,255,0.8); letter-spacing:2px; z-index:11; white-space:nowrap; writing-mode: vertical-rl; --base-rot: 180deg; transform: rotate(180deg); }
+        
+        .mag-blurb { position:absolute; z-index:12; color:white; display:flex; flex-direction:column; }
+        .mag-blurb-left { top: 180px; left: 24px; text-align: left; }
+        .mag-blurb-right { top: 220px; right: 24px; text-align: right; }
+        .blurb-title { font-family:'Inter', sans-serif; font-size:16px; font-weight:900; line-height:1.1; letter-spacing:-0.5px; }
+        .blurb-sub { font-family:'Pretendard', sans-serif; font-size:8px; font-weight:500; margin-top:4px; opacity:0.9; }
+
+        .mockup-magazine .cover-text-overlay { padding-bottom: 50px; }
+        .mockup-magazine .dyn-title { font-family: 'Inter', sans-serif; font-weight: 900; text-transform: uppercase; letter-spacing: -0.02em; }
+
+        .mag-issue-info { position:absolute; bottom:20px; left:20px; font-family:'Inter', sans-serif; font-size:8px; font-weight:600; color:rgba(255,255,255,0.9); letter-spacing:1px; z-index:12; white-space:nowrap; }
+
+        /* ── 3. MOVIE POSTER (영화 포스터) ─── */
+        .mockup-movie { display:none; position:relative; width:275px; height:410px; }
+        .movie-front { position:absolute; inset:0; box-shadow: 0 20px 45px rgba(0,0,0,0.3); z-index:2; border:1px solid rgba(255,255,255,0.08); }
+        
+        .movie-laurel { top:20px; color:rgba(255,255,255,0.9); z-index:11; display:flex; flex-direction:column; align-items:center; gap:4px; }
+        .movie-laurel svg { width:45px; height:18px; fill:currentColor; pointer-events:none; }
+        .movie-laurel span { font-size:5px; font-weight:700; letter-spacing:1px; text-transform:uppercase; line-height:1.2; text-align:center; }
+        
+        .mockup-movie .cover-text-overlay { justify-content: center !important; align-items: center !important; padding-bottom: 50px !important; }
+        .mockup-movie .dyn-title { font-family: 'Oswald', 'Anton', sans-serif !important; font-weight: 900; text-transform: uppercase; line-height: 1; letter-spacing: -0.02em; font-size:38px; --scale-y: 1.15; margin-bottom:12px; }
+        .mockup-movie .dyn-author { font-size:8px; letter-spacing: 3px; opacity:0.8; font-weight:600; }
+        
+        .movie-credits-block { bottom:18px; z-index:12; display:flex; flex-direction:column; align-items:center; width: 90%; }
+        .mc-cast { font-family:'Inter', sans-serif; font-size:5.5px; font-weight:800; color:rgba(255,255,255,0.9); margin-bottom:6px; letter-spacing:1px; word-spacing:2px; text-align:center; }
+        .mc-crew { font-family:'Inter', sans-serif; font-size:4px; font-weight:400; color:rgba(255,255,255,0.6); text-transform:uppercase; letter-spacing:0.5px; line-height:1.6; text-align:center; }
+
+        /* ── 4. WEB NOVEL (웹소설) ─── */
+        .mockup-device { display:none; position:relative; width:220px; height:440px; }
+        .device-frame { position:absolute; inset:0; background:#111; border-radius:32px; border: 6px solid #1a1a1c; box-shadow: 0 25px 45px rgba(0,0,0,0.25), inset 0 0 0 1px #333; z-index:2; }
+        .device-screen { position:absolute; inset:4px; border-radius:24px; z-index:3; overflow:hidden; }
+        .device-notch { position:absolute; top:4px; left:50%; transform:translateX(-50%); width:64px; height:16px; background:#111; border-radius:0 0 10px 10px; z-index:20; }
+        
+        .app-ui-top { position:absolute; top:0; left:0; right:0; height:80px; z-index:20; background:linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, transparent 100%); padding:12px 16px; display:flex; flex-direction:column; pointer-events:none; }
+        .app-status-bar { display:flex; justify-content:space-between; align-items:center; color:white; font-size:9px; font-weight:600; text-shadow:0 1px 2px rgba(0,0,0,0.5); pointer-events:auto; width: 100%; margin-bottom:12px;}
+        .app-back-btn { color:white; font-size:18px; font-weight:bold; pointer-events:auto; line-height:1; }
+        
+        .mockup-device .cover-text-overlay { padding: 32px 20px; align-items: flex-start !important; justify-content: flex-end !important; }
+        
+        .mockup-device .dyn-author { font-size:10px; margin-bottom:4px; opacity:0.9; letter-spacing:0.5px; text-align: left !important; text-transform:none;}
+        .mockup-device .dyn-title { font-size:26px; line-height:1.2; margin-bottom:12px; text-align: left !important; }
+        
+        .wn-stats { display:flex; gap:8px; margin-bottom:12px; justify-content: flex-start !important; align-items:center;}
+        .wn-tags { display:flex; gap:6px; flex-wrap:wrap; justify-content: flex-start !important; }
+        .wn-tag { background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); border:1px solid rgba(255,255,255,0.15); color:white; font-size:8px; padding:5px 9px; border-radius:12px; font-weight:500; }
+        
+        .capture-area.theme-black .app-ui-top { background:linear-gradient(to bottom, rgba(255,255,255,0.8) 0%, transparent 100%); }
+        .capture-area.theme-black .app-back-btn { color: #111; text-shadow:none;}
+        .capture-area.theme-black .wn-tag { background: rgba(255,255,255,0.8); color: #111; border-color: rgba(0,0,0,0.1); font-weight: 600; }
+
+        .toast { position:fixed; bottom:24px; right:24px; background:var(--ink); color:white; border-radius:8px; padding:12px 20px; font-size:13px; font-weight:500; box-shadow:0 10px 30px rgba(0,0,0,0.15); transform:translateY(20px); opacity:0; transition:all 0.3s cubic-bezier(0.4,0,0.2,1); z-index:100; }
+        .toast.show { transform:translateY(0); opacity:1; }
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+    <div class="sidebar-header">
+        <div class="logo">Cover Studio</div>
+        <p class="tagline">Perfect Align Mockup Editor</p>
+    </div>
+    <div class="tab-nav">
+        <button class="tab-btn active" data-tab="artwork">아트워크</button>
+        <button class="tab-btn" data-tab="style">스타일</button>
+        <button class="tab-btn" data-tab="text">텍스트</button>
+    </div>
+
+    <div class="sidebar-scroll">
+        <div class="tab-panel active" id="tab-artwork">
+            <div class="group">
+                <label for="imageUpload" class="upload-zone" id="uploadZone">
+                    <div class="upload-text">이미지 업로드</div>
+                    <div class="upload-sub">클릭하거나 드래그 앤 드롭</div>
+                </label>
+                <input type="file" id="imageUpload" accept="image/*" onclick="this.value=null">
+            </div>
+
+            <div class="group">
+                <span class="group-label">목업 종류</span>
+                <div class="mode-grid">
+                    <button class="mode-btn active" data-mode="book"><div class="mi">📖</div><div class="ml">책 표지</div></button>
+                    <button class="mode-btn" data-mode="magazine"><div class="mi">📰</div><div class="ml">잡지</div></button>
+                    <button class="mode-btn" data-mode="movie"><div class="mi">🎬</div><div class="ml">영화 포스터</div></button>
+                    <button class="mode-btn" data-mode="device"><div class="mi">📱</div><div class="ml">웹소설</div></button>
+                </div>
+            </div>
+
+            <div class="group" style="margin-top:8px;">
+                <span class="group-label">이미지 확대 (Zoom)</span>
+                <div class="slider-wrap">
+                    <input type="range" id="zoomInput" min="100" max="250" value="100">
+                    <span class="slider-val" id="zoomVal">100%</span>
+                </div>
+            </div>
+            
+            <div class="group">
+                <span class="group-label">이미지 밝기</span>
+                <div class="slider-wrap">
+                    <input type="range" id="brightInput" min="30" max="150" value="100">
+                    <span class="slider-val" id="brightVal">100%</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-panel" id="tab-style">
+            <div class="group">
+                <span class="group-label">전체 텍스트 테마 (캔버스에서 개별 클릭 수정 가능)</span>
+                <div class="pill-row" id="themePills">
+                    <div class="pill active" data-theme="light">라이트 (White)</div>
+                    <div class="pill" data-theme="dark">다크 (Black)</div>
+                </div>
+            </div>
+
+            <div class="group">
+                <span class="group-label">캔버스 배경색</span>
+                <div class="swatch-row" id="bgSwatches">
+                    <div class="swatch active" style="background:#e9e9eb" data-color="#e9e9eb"></div>
+                    <div class="swatch" style="background:#ffffff" data-color="#ffffff"></div>
+                    <div class="swatch" style="background:#111111" data-color="#111111"></div>
+                    <div class="swatch" style="background:#2a2a2c" data-color="#2a2a2c"></div>
+                    <div class="swatch" style="background:#3a3530" data-color="#3a3530"></div>
+                    <div class="swatch-custom"><span>+</span><input type="color" id="bgColorCustom" value="#e9e9eb"></div>
+                </div>
+            </div>
+
+            <div class="group" id="spineColorGroup">
+                <span class="group-label">책등(Spine) 전용 색상</span>
+                <div class="swatch-row" id="spineSwatches">
+                    <div class="swatch active" style="background:#1a1a1a" data-scolor="#1a1a1a"></div>
+                    <div class="swatch" style="background:#ffffff" data-scolor="#ffffff"></div>
+                    <div class="swatch" style="background:#8b0000" data-scolor="#8b0000"></div>
+                    <div class="swatch" style="background:#003366" data-scolor="#003366"></div>
+                    <div class="swatch" style="background:#4b5320" data-scolor="#4b5320"></div>
+                    <div class="swatch-custom"><span>+</span><input type="color" id="spineColorCustom" value="#1a1a1a"></div>
+                </div>
+            </div>
+
+            <div class="group" style="margin-top:8px;">
+                <span class="group-label">표지 옵션</span>
+                <div class="toggle-list">
+                    <div class="toggle-row" data-toggle="toggleNoise"><span class="toggle-name">필름 노이즈 (Grain)</span><div class="toggle" id="toggleNoise"></div></div>
+                    <div class="toggle-row" data-toggle="toggleSheen"><span class="toggle-name">종이/화면 광택 (Glossy)</span><div class="toggle on" id="toggleSheen"></div></div>
+                    <div class="toggle-row" data-toggle="toggleTilt"><span class="toggle-name">마우스 3D 틸트</span><div class="toggle on" id="toggleTilt"></div></div>
+                    <div class="toggle-row" data-toggle="toggleBarcode"><span class="toggle-name">바코드 표시 (책/잡지)</span><div class="toggle" id="toggleBarcode"></div></div>
+                    <div class="toggle-row" data-toggle="toggleCredits" id="rowCredits" style="display:none;"><span class="toggle-name">영화 크레딧/로렐 표시</span><div class="toggle on" id="toggleCredits"></div></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-panel" id="tab-text">
+            <div style="background:var(--surface-alt); padding:14px; border-radius:6px; border:1px solid var(--border); font-size:11.5px; line-height:1.45; color:var(--text-sub);">
+                💡 <b>에디터 완벽 활용법</b><br>
+                목업 화면 안의 글씨(제목, 로고, 배우, 태그 등)를 <b>마우스로 잡아 자유롭게 이동</b>시키거나, <b>클릭하여 글씨를 바로 수정</b>해보세요.
+            </div>
+
+            <div class="group"><span class="group-label">서브 텍스트 (저자/부제/배우)</span><input type="text" class="text-input" id="authorInput" placeholder="입력 시 캔버스 내 텍스트에 적용"></div>
+            <div class="group"><span class="group-label">메인 타이틀</span><input type="text" class="text-input" id="titleInput" placeholder="입력 시 캔버스 내 타이틀에 적용"></div>
+
+            <div class="group" style="margin-top:8px;">
+                <span class="group-label">선택한 텍스트 가로 정렬</span>
+                <div class="pill-row" id="alignPills">
+                    <div class="pill" data-align="left" style="flex:1;">왼쪽</div>
+                    <div class="pill active" data-align="center" style="flex:1;">가운데</div>
+                    <div class="pill" data-align="right" style="flex:1;">오른쪽</div>
+                </div>
+            </div>
+
+            <div class="group">
+                <span class="group-label">서체 (Typography)</span>
+                <select class="text-input" id="fontSelect">
+                    <option value="'Pretendard', sans-serif">Pretendard (모던 고딕)</option>
+                    <option value="'Inter', sans-serif">Inter (깔끔한 영문)</option>
+                    <option value="'Nanum Myeongjo', serif">Nanum Myeongjo (우아한 명조)</option>
+                    <option value="'Gowun Dodum', sans-serif">Gowun Dodum (감성 돋움)</option>
+                    <option value="'Noto Serif KR', serif">Noto Serif KR (본명조)</option>
+                    <option value="'Instrument Serif', serif">Instrument Serif (클래식 영문)</option>
+                    <option value="'Playfair Display', serif">Playfair Display (잡지 로고용)</option>
+                    <option value="'Oswald', sans-serif">Oswald (포스터/시네마틱)</option>
+                </select>
+            </div>
+
+            <div class="group" id="posGroup">
+                <span class="group-label">전체 텍스트 세로 위치 (웹소설용)</span>
+                <div class="pill-row">
+                    <div class="pill active" data-pos="bottom">하단</div>
+                    <div class="pill" data-pos="top">상단</div>
+                    <div class="pill" data-pos="center">중앙</div>
+                </div>
+            </div>
+
+            <div class="group">
+                <span class="group-label">글자 크기 (선택한 글씨 기준)</span>
+                <div class="slider-wrap">
+                    <input type="range" id="titleSize" min="10" max="100" value="36">
+                    <span class="slider-val" id="titleSize-val">36px</span>
+                </div>
+            </div>
+
+            <div class="group">
+                <span class="group-label">글자 색상</span>
+                <div class="swatch-row">
+                    <div class="swatch active" style="background:#ffffff" data-tc="#ffffff"></div>
+                    <div class="swatch" style="background:#111111" data-tc="#111111"></div>
+                    <div class="swatch" style="background:#d4af37" data-tc="#d4af37"></div>
+                    <div class="swatch" style="background:#e63946" data-tc="#e63946"></div>
+                    <div class="swatch" style="background:#a8dadc" data-tc="#a8dadc"></div>
+                    <div class="swatch-custom"><span>+</span><input type="color" id="tcColorCustom" value="#ffffff"></div>
+                </div>
+            </div>
+
+            <div class="group" style="margin-top:8px;">
+                <div class="toggle-list">
+                    <div class="toggle-row" data-toggle="toggleText"><span class="toggle-name">표지에 텍스트/UI 표시</span><div class="toggle on" id="toggleText"></div></div>
+                    <div class="toggle-row" data-toggle="toggleShadow"><span class="toggle-name">텍스트 입체 그림자</span><div class="toggle on" id="toggleShadow"></div></div>
+                    <div class="toggle-row" data-toggle="toggleGradBg"><span class="toggle-name">텍스트용 어두운 배경</span><div class="toggle" id="toggleGradBg"></div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="sidebar-footer">
+        <button class="save-btn" id="saveBtn">Export to PNG</button>
+    </div>
+</div>
+
+<div class="main-view" id="mainView">
+    <div id="export-wrap">
+        <div id="capture-area" class="capture-area">
+            <div id="noiseOverlay"></div>
+
+            <div id="tiltWrap">
+                <div class="mockup-book" id="mockupBook">
+                    <div class="book-wrapper" id="bookWrapper">
+                        <div class="book-spine" id="bookSpine">
+                            <div class="spine-bg-layer cover-bg" id="bg-spineBook"></div>
+                            <div class="spine-rib" style="top:30px;"></div>
+                            <div class="spine-rib" style="bottom:60px;"></div>
+                            <div class="spine-text text-drag center-x" id="spineText" contenteditable="true" spellcheck="false" style="top:50%;">TITLE</div>
+                            <div class="spine-text text-drag center-x" style="font-size:7px; letter-spacing:1px; --base-rot:0deg; bottom:20px;" contenteditable="true" spellcheck="false">PUB</div>
+                        </div>
+                        <div class="book-pages"></div>
+                        <div class="book-front draggable-cover has-sheen" id="coverBook">
+                            <div class="cover-bg" id="bg-coverBook"></div>
+                            <div class="sheen-overlay"></div>
+                            <div class="deco-group visible book-deco-frame"></div>
+                            
+                            <div class="cover-placeholder"><div class="ph-icon">📖</div><div class="ph-text">이미지를 업로드하세요</div></div>
+                            
+                            <div class="cover-text-overlay visible has-shadow">
+                                <div class="dyn-title sync-title text-drag" style="font-family:'Nanum Myeongjo', serif;" contenteditable="true" spellcheck="false">BOOK TITLE</div>
+                                <div class="dyn-author sync-author text-drag" contenteditable="true" spellcheck="false">AUTHOR NAME</div>
+                            </div>
+                            
+                            <div class="deco-group visible text-drag center-x theme-target book-publisher-logo" contenteditable="true" spellcheck="false">PUBLISHER</div>
+                            
+                            <div class="cover-barcode">
+                                <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 30' preserveAspectRatio='none'><rect width='60' height='30' fill='white'/><g fill='black'><rect x='3' y='2' width='1' height='22'/><rect x='5' y='2' width='2' height='22'/><rect x='8' y='2' width='1' height='22'/><rect x='10' y='2' width='1' height='22'/><rect x='12' y='2' width='3' height='22'/><rect x='16' y='2' width='1' height='22'/><rect x='18' y='2' width='2' height='22'/><rect x='22' y='2' width='1' height='22'/><rect x='24' y='2' width='1' height='22'/><rect x='26' y='2' width='3' height='22'/><rect x='30' y='2' width='1' height='22'/><rect x='32' y='2' width='2' height='22'/><rect x='35' y='2' width='1' height='22'/><rect x='37' y='2' width='1' height='22'/><rect x='39' y='2' width='2' height='22'/><rect x='42' y='2' width='1' height='22'/><rect x='44' y='2' width='3' height='22'/><rect x='48' y='2' width='1' height='22'/><rect x='50' y='2' width='2' height='22'/><rect x='53' y='2' width='1' height='22'/><rect x='55' y='2' width='2' height='22'/></g></svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mockup-magazine" id="mockupMagazine">
+                    <div class="magazine-front draggable-cover has-sheen" id="coverMag">
+                        <div class="cover-bg" id="bg-coverMag"></div>
+                        <div class="sheen-overlay"></div>
+                        
+                        <div class="deco-group visible mag-masthead text-drag center-x" contenteditable="true" spellcheck="false">MAGAZINE</div>
+                        <div class="deco-group visible mag-side-text text-drag" contenteditable="true" spellcheck="false">ISSUE NO. 01 / SPRING 2026</div>
+                        
+                        <div class="deco-group visible mag-blurb mag-blurb-left text-drag" contenteditable="true" spellcheck="false">
+                            <div class="blurb-title">FEATURED</div>
+                            <div class="blurb-sub">The Sound of Style</div>
+                        </div>
+                        <div class="deco-group visible mag-blurb mag-blurb-right text-drag" style="text-align:right;" contenteditable="true" spellcheck="false">
+                            <div class="blurb-title">TRENDS</div>
+                            <div class="blurb-sub">Future of Fashion</div>
+                        </div>
+
+                        <div class="cover-placeholder"><div class="ph-icon">📰</div><div class="ph-text">이미지를 업로드하세요</div></div>
+                        
+                        <div class="cover-text-overlay visible has-shadow" style="padding-bottom:60px;">
+                            <div class="dyn-title sync-title text-drag" contenteditable="true" spellcheck="false">MAIN STORY</div>
+                            <div class="dyn-author sync-author text-drag" style="margin-top:6px; font-size:12px;" contenteditable="true" spellcheck="false">Read the exclusive interview</div>
+                        </div>
+                        
+                        <div class="deco-group visible mag-issue-info text-drag" contenteditable="true" spellcheck="false">JUNE 2026 / ISSUE NO. 142</div>
+
+                        <div class="cover-barcode"><svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 30' preserveAspectRatio='none'><rect width='60' height='30' fill='white'/><g fill='black'><rect x='3' y='2' width='1' height='22'/><rect x='5' y='2' width='2' height='22'/><rect x='8' y='2' width='1' height='22'/><rect x='10' y='2' width='1' height='22'/><rect x='12' y='2' width='3' height='22'/><rect x='16' y='2' width='1' height='22'/><rect x='18' y='2' width='2' height='22'/><rect x='22' y='2' width='1' height='22'/><rect x='24' y='2' width='1' height='22'/><rect x='26' y='2' width='3' height='22'/><rect x='30' y='2' width='1' height='22'/><rect x='32' y='2' width='2' height='22'/><rect x='35' y='2' width='1' height='22'/><rect x='37' y='2' width='1' height='22'/><rect x='39' y='2' width='2' height='22'/><rect x='42' y='2' width='1' height='22'/><rect x='44' y='2' width='3' height='22'/><rect x='48' y='2' width='1' height='22'/><rect x='50' y='2' width='2' height='22'/><rect x='53' y='2' width='1' height='22'/><rect x='55' y='2' width='2' height='22'/></g></svg></div>
+                    </div>
+                </div>
+
+                <div class="mockup-movie" id="mockupMovie">
+                    <div class="movie-front draggable-cover has-sheen" id="coverMovie">
+                        <div class="cover-bg" id="bg-coverMovie"></div>
+                        <div class="sheen-overlay"></div>
+                        
+                        <div class="deco-group visible movie-laurel text-drag center-x" id="mcLaurel">
+                            <svg viewBox="0 0 100 40" style="pointer-events:none; width:45px; height:18px; fill:currentColor;">
+                                <path d="M40,30 C20,30 10,15 15,10 C20,15 35,25 40,30 Z"/>
+                                <path d="M60,30 C80,30 90,15 85,10 C80,15 65,25 60,30 Z"/>
+                                <circle cx="50" cy="20" r="4"/>
+                            </svg>
+                            <span contenteditable="true" spellcheck="false" style="pointer-events:auto; display:block;">OFFICIAL SELECTION<br>FESTIVAL FILM</span>
+                        </div>
+                        
+                        <div class="cover-placeholder"><div class="ph-icon">🎬</div><div class="ph-text">이미지를 업로드하세요</div></div>
+                        
+                        <div class="cover-text-overlay visible has-shadow">
+                            <div class="dyn-author sync-author text-drag" contenteditable="true" spellcheck="false">A FILM BY DIRECTOR</div>
+                            <div class="dyn-title sync-title text-drag" style="font-family:'Oswald', sans-serif;" contenteditable="true" spellcheck="false">MOVIE TITLE</div>
+                        </div>
+                        
+                        <div class="deco-group visible movie-credits-block text-drag center-x" id="mcBlock" contenteditable="true" spellcheck="false">
+                            <div class="mc-cast sync-author">ACTOR A · ACTOR B · ACTOR C</div>
+                            <div class="mc-crew">director of photography JOHN DOE edited by JANE SMITH production designer TOM LEE<br>music by ALAN SMITHEE produced by MOVIE STUDIO</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mockup-device" id="mockupDevice">
+                    <div class="device-frame">
+                        <div class="device-notch"></div>
+                        <div class="device-screen draggable-cover has-sheen" id="coverDevice">
+                            <div class="cover-bg" id="bg-coverDevice"></div>
+                            
+                            <div class="deco-group visible app-ui-top">
+                                <div class="app-status-bar">
+                                    <span class="text-drag" contenteditable="true" spellcheck="false">12:26</span>
+                                    <span class="text-drag" contenteditable="true" spellcheck="false">LTE 🔋</span>
+                                </div>
+                                <span class="text-drag app-back-btn" contenteditable="true" spellcheck="false">←</span>
+                            </div>
+                            
+                            <div class="sheen-overlay"></div>
+                            <div class="cover-placeholder"><div class="ph-icon">📱</div><div class="ph-text">이미지를 업로드하세요</div></div>
+                            
+                            <div class="cover-text-overlay visible has-shadow">
+                                <div class="dyn-author sync-author text-drag" style="font-size:11px; margin-bottom:4px; opacity:0.9; letter-spacing:0.5px;" contenteditable="true" spellcheck="false">AUTHOR NAME</div>
+                                <div class="dyn-title sync-title text-drag" style="font-size:28px; line-height:1.2;" contenteditable="true" spellcheck="false">NOVEL TITLE</div>
+                                <div class="deco-group visible wn-stats text-drag" contenteditable="true" spellcheck="false">
+                                    <span style="color:#ffc107; font-size:11px;">★★★★★</span> 
+                                    <span style="font-weight:800; font-size:11px; margin-left:2px; color:#ffc107;">4.9</span> 
+                                    <span style="color:rgba(255,255,255,0.8); font-size:9px; margin-left:6px; font-weight:600;">👁️ 1.2M</span>
+                                </div>
+                                <div class="deco-group visible wn-tags text-drag">
+                                    <div class="wn-tag" contenteditable="true" spellcheck="false">#로맨스판타지</div>
+                                    <div class="wn-tag" contenteditable="true" spellcheck="false">#회빙환</div>
+                                    <div class="wn-tag" contenteditable="true" spellcheck="false">#먼치킨</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const S = {
+    imageUrl: null, mode: 'book',
+    bgColor: '#e9e9eb', spineColor: '#1a1a1a', theme: 'light',
+    zoom: 100, brightness: 100,
+    noise: false, sheen: true, tilt: true, barcode: false, credits: true,
+    textPos: 'center',
+    font: "'Pretendard', sans-serif", textColor: '#ffffff', titleSize: 36,
+    showText: true, shadow: true, gradBg: false
+};
+
+const $ = id => document.getElementById(id);
+const BGS = ['bg-coverBook','bg-coverMag','bg-coverMovie','bg-coverDevice','bg-spineBook'];
+const COVERS = ['coverBook','coverMag','coverMovie','coverDevice'];
+
+// 1️⃣ IMAGE BACKGROUND DRAG
+const bgPos = { 'bg-coverBook':{x:50,y:50}, 'bg-coverMag':{x:50,y:50}, 'bg-coverMovie':{x:50,y:50}, 'bg-coverDevice':{x:50,y:50}, 'bg-spineBook':{x:50,y:50} };
+let isBgDragging = false, bgDragStart = {x:0, y:0}, bgPosStart = {x:50, y:50};
+
+document.querySelectorAll('.draggable-cover').forEach(el=>{
+    el.addEventListener('mousedown', e=>{
+        if(!S.imageUrl) return;
+        if(e.target.closest('.text-drag')) return; 
+        
+        isBgDragging = true;
+        bgDragStart = {x:e.clientX, y:e.clientY};
+        const bgId = 'bg-' + el.id;
+        bgPosStart = {...(bgPos[bgId]||{x:50,y:50})};
+        el.classList.add('dragging'); e.preventDefault();
+    });
+});
+
+document.addEventListener('mousemove', e=>{
+    if(!isBgDragging) return;
+    const dragTarget = document.querySelector('.draggable-cover.dragging');
+    if(!dragTarget) return;
+    
+    const rect = dragTarget.getBoundingClientRect();
+    const scale = S.zoom / 100;
+    
+    let newX = bgPosStart.x - ((e.clientX - bgDragStart.x) / (rect.width * scale)) * 100;
+    let newY = bgPosStart.y - ((e.clientY - bgDragStart.y) / (rect.height * scale)) * 100;
+    
+    newX = Math.max(0, Math.min(100, newX));
+    newY = Math.max(0, Math.min(100, newY));
+
+    BGS.forEach(cid => {
+        const cel = $(cid);
+        if(cel) {
+            bgPos[cid] = {x: newX, y: newY};
+            cel.style.backgroundPosition=`${newX}% ${newY}%`;
+        }
+    });
+});
+document.addEventListener('mouseup', ()=>{ 
+    document.querySelectorAll('.draggable-cover').forEach(el=>el.classList.remove('dragging'));
+    isBgDragging = false; 
+});
+
+
+// 2️⃣ TEXT FREE DRAG & EDITING SYSTEM
+let textDragTarget = null;
+let tStartX = 0, tStartY = 0, elStartX = 0, elStartY = 0;
+let isTextDragging = false;
+let activeTextElement = null; 
+
+$('capture-area').addEventListener('mousedown', e => {
+    const target = e.target.closest('.text-drag');
+    if(!target) return;
+    if(document.activeElement === target || document.activeElement.closest('.text-drag') === target) return;
+
+    textDragTarget = target;
+    tStartX = e.clientX;
+    tStartY = e.clientY;
+    
+    elStartX = parseFloat(target.style.getPropertyValue('--tx')) || 0;
+    elStartY = parseFloat(target.style.getPropertyValue('--ty')) || 0;
+    
+    isTextDragging = false;
+    e.stopPropagation(); 
+});
+
+document.addEventListener('mousemove', e => {
+    if(!textDragTarget) return;
+    const dx = e.clientX - tStartX;
+    const dy = e.clientY - tStartY;
+    
+    if(Math.abs(dx) > 3 || Math.abs(dy) > 3) isTextDragging = true;
+    
+    if(isTextDragging) {
+        textDragTarget.style.setProperty('--tx', `${Math.round(elStartX + dx)}px`);
+        textDragTarget.style.setProperty('--ty', `${Math.round(elStartY + dy)}px`);
+    }
+});
+
+document.addEventListener('mouseup', e => {
+    if(textDragTarget) {
+        if(!isTextDragging) {
+            const editTarget = e.target.closest('[contenteditable="true"]');
+            if(editTarget) {
+                editTarget.focus();
+                activeTextElement = textDragTarget;
+                
+                const selection = window.getSelection();
+                const range = document.createRange();
+                range.selectNodeContents(editTarget);
+                range.collapse(false);
+                selection.removeAllRanges();
+                selection.addRange(range);
+            }
+        } else {
+            activeTextElement = textDragTarget;
+        }
+        textDragTarget = null;
+    }
+});
+
+document.addEventListener('mousedown', e => {
+    if(!e.target.closest('.sidebar') && !e.target.closest('.text-drag')) {
+        activeTextElement = null;
+        if(document.activeElement instanceof HTMLElement) document.activeElement.blur();
+    }
+});
+
+
+// 3️⃣ SIDEBAR LOGIC
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+        document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+        document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+        btn.classList.add('active'); $('tab-'+btn.dataset.tab).classList.add('active');
+    });
+});
+
+$('imageUpload').addEventListener('change', function(e) {
+    const file = e.target.files[0]; 
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+        S.imageUrl = ev.target.result;
+        Object.keys(bgPos).forEach(k => { bgPos[k] = { x: 50, y: 50 }; });
+        const url = `url("${S.imageUrl}")`;
+        BGS.forEach(id=>{
+            const el=$(id);
+            if(el) { el.style.backgroundImage = url; el.style.backgroundPosition = '50% 50%'; }
+        });
+        document.querySelectorAll('.draggable-cover').forEach(el=>el.classList.add('has-image'));
+        const uz = $('uploadZone');
+        uz.classList.add('has-image');
+        uz.querySelector('.upload-text').textContent = file.name.length > 22 ? file.name.slice(0, 20) + '…' : file.name;
+        showToast('Image Uploaded');
+    };
+    reader.readAsDataURL(file);
+});
+
+document.querySelectorAll('.mode-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+        document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active'); S.mode=btn.dataset.mode; switchMode(S.mode);
+    });
+});
+
+function switchMode(mode) {
+    ['Book','Magazine','Movie','Device'].forEach(m=>$('mockup'+m).style.display='none');
+    const map={book:'mockupBook',magazine:'mockupMagazine',movie:'mockupMovie',device:'mockupDevice'};
+    $(map[mode]).style.display='flex';
+    
+    $('rowCredits').style.display = mode === 'movie' ? 'flex' : 'none';
+    $('spineColorGroup').style.display = mode === 'book' ? 'flex' : 'none';
+    
+    document.querySelectorAll('.text-drag, .cover-text-overlay, .wn-tags, .wn-stats').forEach(el => {
+        el.style.alignSelf = ''; el.style.textAlign = ''; el.style.justifyContent = ''; el.style.alignItems = '';
+    });
+
+    if(mode === 'movie' || mode === 'book') {
+        $('posGroup').style.display = 'none';
+        document.querySelectorAll('#alignPills .pill').forEach(p=>p.classList.remove('active'));
+        document.querySelector('#alignPills [data-align="center"]').classList.add('active');
+    } else if (mode === 'device') {
+        $('posGroup').style.display = 'flex';
+        document.querySelectorAll('#alignPills .pill').forEach(p=>p.classList.remove('active'));
+        document.querySelector('#alignPills [data-align="left"]').click();
+        document.querySelectorAll('#posGroup .pill').forEach(p=>p.classList.remove('active'));
+        document.querySelector('#posGroup [data-pos="bottom"]').classList.add('active');
+    } else {
+        $('posGroup').style.display = 'flex';
+        document.querySelectorAll('#alignPills .pill').forEach(p=>p.classList.remove('active'));
+        document.querySelector('#alignPills [data-align="center"]').classList.add('active');
+    }
+    
+    $('tiltWrap').style.transform='';
+    if(mode === 'book') $('bookWrapper').style.transform='rotateY(-6deg)';
+}
+
+function updateImageTransform() {
+    const scale = S.zoom / 100;
+    const bright = S.brightness / 100;
+    BGS.forEach(id=>{
+        const el=$(id);
+        if(el) { el.style.transform = `scale(${scale})`; el.style.filter = `brightness(${bright})`; }
+    });
+}
+$('zoomInput').addEventListener('input', e=>{ S.zoom=e.target.value; $('zoomVal').textContent=e.target.value+'%'; updateImageTransform(); });
+$('brightInput').addEventListener('input', e=>{ S.brightness=e.target.value; $('brightVal').textContent=e.target.value+'%'; updateImageTransform(); });
+
+
+// 4️⃣ STYLE LOGIC
+document.querySelectorAll('#themePills .pill').forEach(el=>{
+    el.addEventListener('click', ()=>{
+        document.querySelectorAll('#themePills .pill').forEach(e=>e.classList.remove('active'));
+        el.classList.add('active'); S.theme=el.dataset.theme;
+        if(S.theme === 'dark') {
+            $('capture-area').classList.add('theme-black');
+            document.querySelectorAll('.theme-target').forEach(t=>t.style.color='rgba(0,0,0,0.8)');
+        } else {
+            $('capture-area').classList.remove('theme-black');
+            document.querySelectorAll('.theme-target').forEach(t=>t.style.color='rgba(255,255,255,0.7)');
+        }
+    });
+});
+
+document.querySelectorAll('#bgSwatches .swatch').forEach(sw=>{ 
+    sw.addEventListener('click', ()=>{
+        document.querySelectorAll('#bgSwatches .swatch').forEach(s=>s.classList.remove('active')); 
+        sw.classList.add('active'); S.bgColor=sw.dataset.color; $('capture-area').style.background=S.bgColor;
+    }); 
+});
+$('bgColorCustom').addEventListener('input', e=>{ S.bgColor=e.target.value; $('capture-area').style.background=S.bgColor; });
+
+document.querySelectorAll('#spineSwatches .swatch').forEach(sw=>{ 
+    sw.addEventListener('click', ()=>{
+        document.querySelectorAll('#spineSwatches .swatch').forEach(s=>s.classList.remove('active')); 
+        sw.classList.add('active'); S.spineColor=sw.dataset.scolor; $('bookSpine').style.backgroundColor=S.spineColor;
+    }); 
+});
+$('spineColorCustom').addEventListener('input', e=>{ S.spineColor=e.target.value; $('bookSpine').style.backgroundColor=S.spineColor; });
+$('bookSpine').style.backgroundColor = S.spineColor;
+
+document.querySelectorAll('.toggle-row').forEach(row=>{
+    row.addEventListener('click', ()=>{const id=row.dataset.toggle; const el=$(id); el.classList.toggle('on'); handleToggle(id, el.classList.contains('on'));});
+});
+
+function handleToggle(id,v){
+    if(id==='toggleNoise'){S.noise=v; $('noiseOverlay').classList.toggle('visible',v);}
+    else if(id==='toggleSheen'){S.sheen=v; COVERS.forEach(c=>$(c).classList.toggle('has-sheen',v));}
+    else if(id==='toggleTilt'){S.tilt=v; if(!v) { $('tiltWrap').style.transform=''; $('bookWrapper').style.transform='rotateY(-6deg)'; }}
+    else if(id==='toggleBarcode'){
+        S.barcode=v; 
+        document.querySelectorAll('.cover-barcode').forEach(b => b.classList.toggle('visible', v));
+    }
+    else if(id==='toggleCredits'){
+        S.credits=v; 
+        $('mcBlock').classList.toggle('visible',v); 
+        $('mcLaurel').classList.toggle('visible',v);
+    }
+    else if(id==='toggleText'){
+        S.showText=v; 
+        document.querySelectorAll('.cover-text-overlay').forEach(o=>o.classList.toggle('visible',v));
+        document.querySelectorAll('.deco-group').forEach(o=>o.classList.toggle('visible',v));
+    }
+    else if(id==='toggleShadow'){S.shadow=v; document.querySelectorAll('.cover-text-overlay').forEach(el=>el.classList.toggle('has-shadow',v));}
+    else if(id==='toggleGradBg'){S.gradBg=v; document.querySelectorAll('.cover-text-overlay').forEach(o=>{ o.style.background=v?'linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 70%)':''; });}
+}
+
+
+// 5️⃣ TEXT LOGIC 
+function updateSyncText(selector, value) { document.querySelectorAll(selector).forEach(el => el.textContent=value); }
+$('authorInput').addEventListener('input', e => { updateSyncText('.sync-author', e.target.value); });
+$('titleInput').addEventListener('input', e => { updateSyncText('.sync-title', e.target.value); $('spineText').textContent = e.target.value; });
+
+document.querySelectorAll('.sync-title').forEach(el => {
+    el.addEventListener('input', e => {
+        $('titleInput').value = e.target.textContent;
+        document.querySelectorAll('.sync-title, #spineText').forEach(other => { if(other !== e.target) other.textContent = e.target.textContent; });
+    });
+});
+document.querySelectorAll('.sync-author').forEach(el => {
+    el.addEventListener('input', e => {
+        $('authorInput').value = e.target.textContent;
+        document.querySelectorAll('.sync-author').forEach(other => { if(other !== e.target) other.textContent = e.target.textContent; });
+    });
+});
+
+document.querySelectorAll('#alignPills .pill').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('#alignPills .pill').forEach(p=>p.classList.remove('active'));
+        btn.classList.add('active');
+        const align = btn.dataset.align;
+        const flexAlign = align === 'left' ? 'flex-start' : align === 'right' ? 'flex-end' : 'center';
+        
+        if(activeTextElement) {
+            activeTextElement.style.textAlign = align;
+            if(activeTextElement.classList.contains('wn-tags') || activeTextElement.classList.contains('wn-stats')) {
+                activeTextElement.style.justifyContent = flexAlign;
+            }
+            activeTextElement.style.alignSelf = flexAlign;
+        } else {
+            document.querySelectorAll('.dyn-title, .dyn-author, .mag-masthead, .mc-cast, .mc-crew, .mag-blurb, .book-publisher-logo, .mag-issue-info').forEach(el => {
+                el.style.textAlign = align;
+                el.style.alignSelf = flexAlign;
+            });
+            document.querySelectorAll('.wn-tags, .wn-stats').forEach(el => {
+                el.style.justifyContent = flexAlign;
+                el.style.alignSelf = flexAlign;
+            });
+            document.querySelectorAll('.cover-text-overlay').forEach(el => el.style.alignItems = flexAlign);
+        }
+    });
+});
+
+$('fontSelect').addEventListener('change', e=>{ 
+    const font = e.target.value;
+    if(activeTextElement) {
+        activeTextElement.style.fontFamily = font;
+    } else {
+        document.querySelectorAll('.dyn-title, .dyn-author, .spine-text, .mag-masthead, .mc-cast, .mc-crew, .mag-issue-info, .blurb-title').forEach(el=>el.style.fontFamily=font);
+    }
+});
+
+$('titleSize').addEventListener('input', function(){ 
+    const size = this.value + 'px';
+    $('titleSize-val').textContent = size; 
+    if(activeTextElement) {
+        activeTextElement.style.fontSize = size;
+    } else {
+        document.querySelectorAll('.dyn-title, .mag-masthead').forEach(el=>el.style.fontSize=size);
+    }
+});
+
+document.querySelectorAll('#posGroup [data-pos]').forEach(el=>{
+    el.addEventListener('click', ()=>{
+        document.querySelectorAll('#posGroup [data-pos]').forEach(e=>e.classList.remove('active')); el.classList.add('active'); S.textPos=el.dataset.pos;
+        document.querySelectorAll('.cover-text-overlay').forEach(ol=>{
+            if(!ol.parentElement.id.includes('Book') && !ol.parentElement.id.includes('Movie')) {
+                ol.style.justifyContent=S.textPos==='bottom'?'flex-end':S.textPos==='top'?'flex-start':'center';
+            }
+        });
+    });
+});
+
+document.querySelectorAll('[data-tc]').forEach(sw=>{ sw.addEventListener('click', ()=>{document.querySelectorAll('[data-tc]').forEach(s=>s.classList.remove('active')); sw.classList.add('active'); setTextColor(sw.dataset.tc);}); });
+$('tcColorCustom').addEventListener('input', e=>{document.querySelectorAll('[data-tc]').forEach(s=>s.classList.remove('active')); setTextColor(e.target.value);});
+
+function setTextColor(c) {
+    if(activeTextElement) {
+        activeTextElement.style.color = c;
+        activeTextElement.style.textShadow = 'none';
+    } else {
+        document.querySelectorAll('.text-drag').forEach(el=>{ el.style.color=c; el.style.textShadow='none'; }); 
+    }
+} 
+
+// 3D TILT 모션 
+$('mainView').addEventListener('mousemove', e=>{
+    if(!S.tilt) return;
+    const ca=$('capture-area'); const rect=ca.getBoundingClientRect();
+    const dx=((e.clientX-rect.left)/rect.width-0.5)*2;
+    const dy=((e.clientY-rect.top)/rect.height-0.5)*2;
+    $('tiltWrap').style.transform=`perspective(1200px) rotateY(${dx*2}deg) rotateX(${-dy*2}deg)`;
+    if(S.mode === 'book') $('bookWrapper').style.transform=`rotateY(${-6 + dx*4}deg)`;
+});
+$('mainView').addEventListener('mouseleave', ()=>{ $('tiltWrap').style.transform=''; if(S.mode==='book')$('bookWrapper').style.transform='rotateY(-6deg)';});
+
+
+// 💡 EXPORT – capture-area 직접 캡처 및 overflow:visible 처리
+$('saveBtn').addEventListener('click', async ()=>{
+    if (document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur();
+    }
+    
+    // 타겟을 capture-area로 직접 지정
+    const ca = $('capture-area');
+    const btn = $('saveBtn');
+    document.body.classList.add('exporting');
+    
+    btn.textContent='고화질 렌더링 중...'; 
+    btn.disabled=true;
+    
+    // 목업의 그림자가 잘리지 않도록 임시로 overflow: visible 속성 부여
+    const originalOverflow = ca.style.overflow;
+    ca.style.overflow = 'visible';
+
+    // CSS 적용 대기
+    await new Promise(r => setTimeout(r, 150)); 
+
+    try {
+        // 고화질 저장: 4배율 (약 3440 x 2160 해상도)
+        const exportScale = 4; 
+
+        // html2canvas 실행 대상을 capture-area(ca)로 변경
+        const c = await html2canvas(ca, {
+            scale: exportScale,
+            useCORS: true,
+            allowTaint: false, 
+            backgroundColor: S.bgColor,
+            logging: false,
+            removeContainer: true,
+            imageTimeout: 0,
+            onclone: (clonedDoc) => {
+                clonedDoc.body.classList.add('exporting');
+                if(S.mode === 'book') clonedDoc.getElementById('bookWrapper').style.transform = 'rotateY(-6deg)';
+                
+                // clone된 capture-area에서도 동일하게 설정 및 자체 외곽선/그림자 제거
+                const caClone = clonedDoc.getElementById('capture-area');
+                if(caClone) {
+                    caClone.style.overflow = 'visible';
+                    caClone.style.boxShadow = 'none';
+                    caClone.style.borderRadius = '0';
+                }
+                
+                // background-image → <img> 태그로 교체하여 고화질 유지
+                if(S.imageUrl) {
+                    clonedDoc.querySelectorAll('.cover-bg').forEach(bgEl => {
+                        const img = clonedDoc.createElement('img');
+                        img.src = S.imageUrl;
+                        img.style.cssText = `
+                            position: absolute;
+                            inset: 0;
+                            width: 100%;
+                            height: 100%;
+                            object-fit: cover;
+                            object-position: ${bgEl.style.backgroundPosition || '50% 50%'};
+                            transform: ${bgEl.style.transform || 'scale(1)'};
+                            filter: ${bgEl.style.filter || 'brightness(1)'};
+                            image-rendering: high-quality;
+                            pointer-events: none;
+                        `;
+                        bgEl.style.backgroundImage = 'none';
+                        bgEl.appendChild(img);
+                    });
+                    // 척추(spine) 배경 레이어도 처리
+                    clonedDoc.querySelectorAll('.spine-bg-layer').forEach(bgEl => {
+                        const img = clonedDoc.createElement('img');
+                        img.src = S.imageUrl;
+                        img.style.cssText = `
+                            position: absolute;
+                            inset: 0;
+                            width: 100%;
+                            height: 100%;
+                            object-fit: cover;
+                            object-position: left center;
+                            opacity: 0.3;
+                            filter: blur(2px) grayscale(50%);
+                            image-rendering: high-quality;
+                            pointer-events: none;
+                        `;
+                        bgEl.style.backgroundImage = 'none';
+                        bgEl.appendChild(img);
+                    });
+                }
+                
+                // 폰트 렌더링 및 안티앨리어싱 최적화 CSS 강제 주입
+                const s = clonedDoc.createElement('style');
+                s.textContent=`
+                    *, *::before, *::after { transition: none !important; animation: none !important; }
+                    .main-view { background: transparent !important; }
+                    body { background: transparent !important; margin: 0; padding: 0; }
+                    #tiltWrap { transform: none !important; }
+                    [contenteditable="true"] { outline: none !important; background: transparent !important; border: none !important; cursor: default !important; }
+                    
+                    .cover-bg { image-rendering: high-quality !important; }
+                    .text-drag, .dyn-title, .dyn-author, .spine-text, .mag-masthead {
+                        text-rendering: geometricPrecision !important;
+                        -webkit-font-smoothing: antialiased !important;
+                        transform-style: preserve-3d !important;
+                    }
+                `;
+                clonedDoc.head.appendChild(s);
+            }
+        });
+        
+        const link = document.createElement('a'); 
+        link.download = `CoverStudio_HQ_${Date.now()}.png`; 
+        link.href = c.toDataURL('image/png', 1.0); 
+        link.click();
+        showToast('고화질 저장 완료! 🎉');
+    } catch (err) {
+        console.error(err); 
+        showToast('저장 실패');
+    } finally {
+        // 원상 복구
+        ca.style.overflow = originalOverflow;
+        document.body.classList.remove('exporting'); 
+        btn.textContent='Export to PNG'; 
+        btn.disabled=false;
+    }
+});
+
+function showToast(msg){const t=$('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2400);}
+
+// Init
+switchMode('book');
+</script>
+</body>
+</html>
