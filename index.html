@@ -534,6 +534,17 @@ textarea.input{height:auto;min-height:36px;padding:9px 12px;line-height:1.45;res
   font:500 14px/1.45 var(--ui);resize:none;outline:none;box-shadow:0 0 0 2px #3b6cff,0 12px 32px -8px rgba(0,0,0,.35)}
 .fonts .font-chip .font-sample{height:22px}
 .sec-sub{font-size:11.5px;font-weight:700;color:#8c8c94;letter-spacing:.02em;margin:4px 0 -6px}
+/* ===== multi text selection ===== */
+#multiSelTools{display:flex;flex-direction:column;gap:12px}
+#multiSelTools[hidden]{display:none!important}
+.multi-sel-count{padding:10px 12px;border-radius:12px;background:#f6f7ff;border:1px solid #e4e8ff;color:#34406d;font-size:12px;line-height:1.5}
+.multi-sel-count b{font-weight:750;color:#25315e}
+.multi-align-title{font-size:11.5px;font-weight:700;color:#707078}
+.multi-align-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
+.multi-align-grid button{height:32px;border-radius:9px;background:var(--fill);font-size:11.5px;font-weight:650;color:var(--sub);transition:all .15s ease}
+.multi-align-grid button:hover{background:var(--fill-2);color:var(--ink)}
+.multi-help{font-size:10.8px;color:#8c8c94;line-height:1.55}
+.sel-panel-multi #singleSelTools{display:none!important}
 </style>
 </head>
 <body>
@@ -634,33 +645,48 @@ textarea.input{height:auto;min-height:36px;padding:9px 12px;line-height:1.45;res
       <div id="selPanel" hidden>
         <div class="sec-body" style="padding:0">
           <div class="sel-head"><div><small>선택한 글씨</small><b id="selName"></b></div><button type="button" id="selDone">완료</button></div>
-          <div class="field">
-            <div class="field-head"><label for="selText">내용</label></div>
-            <textarea class="input" id="selText" rows="1"></textarea>
-            <p class="hint" id="selTextHint" hidden></p>
+          <div id="multiSelTools" hidden>
+            <div class="multi-sel-count"><b id="multiSelCount">2개 선택됨</b><br>선택한 글씨를 드래그하면 함께 움직여요.</div>
+            <div class="multi-align-title">선택한 글씨 한꺼번에 정렬</div>
+            <div class="multi-align-grid">
+              <button type="button" data-multi-align="left">왼쪽 맞춤</button>
+              <button type="button" data-multi-align="centerX">가로 중앙</button>
+              <button type="button" data-multi-align="right">오른쪽 맞춤</button>
+              <button type="button" data-multi-align="top">위쪽 맞춤</button>
+              <button type="button" data-multi-align="centerY">세로 중앙</button>
+              <button type="button" data-multi-align="bottom">아래쪽 맞춤</button>
+            </div>
+            <p class="multi-help">Shift(또는 Ctrl/⌘)를 누르고 글씨를 추가로 클릭하면 여러 개를 선택할 수 있어요.</p>
           </div>
-          <div class="field" id="selFontWrap">
-            <div class="field-head"><span>글꼴</span></div>
-            <div class="fonts" id="selFont" role="radiogroup" aria-label="선택한 글씨 글꼴"></div>
+          <div id="singleSelTools">
+            <div class="field">
+              <div class="field-head"><label for="selText">내용</label></div>
+              <textarea class="input" id="selText" rows="1"></textarea>
+              <p class="hint" id="selTextHint" hidden></p>
+            </div>
+            <div class="field" id="selFontWrap">
+              <div class="field-head"><span>글꼴</span></div>
+              <div class="fonts" id="selFont" role="radiogroup" aria-label="선택한 글씨 글꼴"></div>
+            </div>
+            <div class="field">
+              <div class="field-head"><label for="selSize">크기</label><output id="selSizeOut"></output></div>
+              <input type="range" id="selSize" min="4" max="90" step="0.5">
+            </div>
+            <div class="field">
+              <div class="field-head"><span>색상</span><button type="button" class="color-default" id="selColorReset">기본색</button></div>
+              <div class="swatches" id="selColor"></div>
+            </div>
+            <div class="field" id="selAlignWrap">
+              <div class="field-head"><span>정렬</span></div>
+              <div class="seg fill" id="selAlign"><button type="button" data-v="">기본</button><button type="button" data-v="left">왼쪽</button><button type="button" data-v="center">가운데</button><button type="button" data-v="right">오른쪽</button></div>
+            </div>
+            <div class="btn-row">
+              <button type="button" class="btn subtle" id="selPosReset">위치 되돌리기</button>
+              <button type="button" class="btn subtle" id="selStyleReset">스타일 되돌리기</button>
+            </div>
+            <button type="button" class="btn subtle" id="selHide">숨기기</button>
+            <p class="hint">방향키로 1px씩, Shift와 함께 누르면 10px씩 옮겨져요.</p>
           </div>
-          <div class="field">
-            <div class="field-head"><label for="selSize">크기</label><output id="selSizeOut"></output></div>
-            <input type="range" id="selSize" min="4" max="90" step="0.5">
-          </div>
-          <div class="field">
-            <div class="field-head"><span>색상</span><button type="button" class="color-default" id="selColorReset">기본색</button></div>
-            <div class="swatches" id="selColor"></div>
-          </div>
-          <div class="field" id="selAlignWrap">
-            <div class="field-head"><span>정렬</span></div>
-            <div class="seg fill" id="selAlign"><button type="button" data-v="">기본</button><button type="button" data-v="left">왼쪽</button><button type="button" data-v="center">가운데</button><button type="button" data-v="right">오른쪽</button></div>
-          </div>
-          <div class="btn-row">
-            <button type="button" class="btn subtle" id="selPosReset">위치 되돌리기</button>
-            <button type="button" class="btn subtle" id="selStyleReset">스타일 되돌리기</button>
-          </div>
-          <button type="button" class="btn subtle" id="selHide">숨기기</button>
-          <p class="hint">방향키로 1px씩, Shift와 함께 누르면 10px씩 옮겨져요.</p>
         </div>
       </div>
 
@@ -1768,15 +1794,15 @@ function drawSelection(ctx){
     }
     ctx.restore();
   };
-  if (hoverId && hoverId !== selId) draw(hoverId, false);
-  if (selId) draw(selId, true);
+  if (hoverId && !selectedIds.includes(hoverId)) draw(hoverId, false);
+  if (selectedIds.length) selectedIds.forEach(id => draw(id, id === selId));
 }
 /* ───────────────── PREVIEW LOOP ───────────────── */
 const view = $('view'), vctx = view.getContext('2d');
 let dispW = 0, dispH = 0, viewScale = 1, viewScaleY = 1, needs = true;
 let playing = !matchMedia('(prefers-reduced-motion: reduce)').matches;
 let clock = 0, lastTs = null;
-let selId = null, hoverId = null, drag = null;
+let selId = null, selectedIds = [], hoverId = null, drag = null;
 function dirty(){ needs = true; }
 
 function layoutStage(){
@@ -1864,19 +1890,44 @@ function overCover(p){
   const c = lastLayout.tpl.art || lastLayout.tpl.cover;
   return p.x >= c.x && p.x <= c.x + c.w && p.y >= c.y && p.y <= c.y + c.h;
 }
-function select(id){
-  if (selId === id) return;
-  selId = id;
-  if (id) { const sec = $('secText'); if (!sec.open) sec.open = true; }
+function setSelection(ids, primary){
+  const valid = ids.filter(id => !!tplDef(id));
+  selectedIds = Array.from(new Set(valid));
+  selId = primary && selectedIds.includes(primary) ? primary : (selectedIds[0] || null);
+  if (selId) { const sec = $('secText'); if (!sec.open) sec.open = true; }
   syncSel(); dirty();
+}
+function select(id){ setSelection(id ? [id] : [], id || null); }
+function toggleSelection(id){
+  if (!id) return;
+  if (selectedIds.includes(id)) {
+    const next = selectedIds.filter(x => x !== id);
+    setSelection(next, next[0] || null);
+  } else {
+    setSelection([...selectedIds, id], id);
+  }
 }
 
 view.addEventListener('pointerdown', e => {
   if (editor) closeEditor();
   const p = toMock(e), hit = hitLayer(p);
   if (hit) {
-    select(hit.def.id);
-    drag = { type:'text', id:hit.def.id, p, dx:hit.P.dx, dy:hit.P.dy, moved:false };
+    const id = hit.def.id;
+    const multiKey = e.shiftKey || e.ctrlKey || e.metaKey;
+    if (multiKey) {
+      if (selectedIds.includes(id)) {
+        // Modifier-click on an existing selection removes it without starting a drag.
+        toggleSelection(id);
+        return;
+      }
+      toggleSelection(id);
+    } else if (!selectedIds.includes(id) || selectedIds.length === 1) {
+      select(id);
+    }
+    const dragIds = selectedIds.includes(id) ? [...selectedIds] : [id];
+    const start = {};
+    dragIds.forEach(did => { const o = ov(did); start[did] = {dx:o.dx || 0, dy:o.dy || 0}; });
+    drag = { type:'text', ids:dragIds, p, start, moved:false };
   } else if (overCover(p)) {
     select(null);
     if (!IMG.proc) { $('fileInput').click(); return; }
@@ -1899,8 +1950,12 @@ view.addEventListener('pointermove', e => {
     const ddx = p.x - drag.p.x, ddy = p.y - drag.p.y;
     if (!drag.moved && Math.hypot(ddx, ddy) * lastLayout.fit < 3) return;
     drag.moved = true;
-    const all = ovs(true), o = all[drag.id] || (all[drag.id] = {});
-    o.dx = Math.round((drag.dx + ddx) * 2) / 2; o.dy = Math.round((drag.dy + ddy) * 2) / 2;
+    const all = ovs(true);
+    drag.ids.forEach(id => {
+      const o = all[id] || (all[id] = {}), st = drag.start[id] || {dx:0, dy:0};
+      o.dx = Math.round((st.dx + ddx) * 2) / 2;
+      o.dy = Math.round((st.dy + ddy) * 2) / 2;
+    });
     dirty();
   } else {
     const c = drag.cover, src = IMG.proc;
@@ -1927,7 +1982,7 @@ view.addEventListener('wheel', e => {
   set({ imgZoom: Math.max(1, Math.min(3, S.imgZoom * Math.exp(-e.deltaY * .0015))) });
 }, {passive:false});
 document.addEventListener('pointerdown', e => {
-  if (!selId) return;
+  if (!selectedIds.length) return;
   if (e.target === view || e.target.closest('.pop') || e.target.closest('.panel') || e.target.closest('.drawer') || e.target.closest('#inlineEdit') || e.target.closest('.controls')) return;
   select(null);
 });
@@ -2004,7 +2059,7 @@ function set(patch, quiet){
   Object.assign(S, patch);
   if (('filter' in patch && patch.filter !== prev.filter) || ('bright' in patch && patch.bright !== prev.bright)) processImageSoon();
   if ('ratio' in patch) { particleKey = ''; layoutStage(); }
-  if ('mode' in patch && patch.mode !== prev.mode) { closeEditor(true); selId = null; hoverId = null; }
+  if ('mode' in patch && patch.mode !== prev.mode) { closeEditor(true); selId = null; selectedIds = []; hoverId = null; }
   if (!quiet) syncUI();
   syncSel();
   updateSummary();
@@ -2080,7 +2135,7 @@ function buildUI(){
     const keep = {};
     EXPORT_KEYS.forEach(k => keep[k] = S[k]);
     S = Object.assign(fresh(), keep);
-    selId = hoverId = null; closeEditor(true);
+    selId = null; selectedIds = []; hoverId = null; closeEditor(true);
     mouseTilt.x = mouseTilt.y = mouseTilt.tx = mouseTilt.ty = 0;
     processImage(); layoutStage(); syncUI(); syncSel(); updateSummary(); persist();
     toast('설정을 처음 상태로 되돌렸습니다');
@@ -2105,13 +2160,48 @@ function buildUI(){
   $('selStyleReset').addEventListener('click', () => selId && setOv(selId, {font:undefined, size:undefined, color:undefined, align:undefined}));
   $('selHide').addEventListener('click', () => { if (!selId) return; const h = !ov(selId).hidden; setOv(selId, {hidden: h || undefined}); if (h) { toast('글씨를 숨겼어요. 아래 목록에서 다시 켤 수 있어요'); select(null); } });
   $('selDone').addEventListener('click', () => select(null));
+  document.querySelectorAll('[data-multi-align]').forEach(b => b.addEventListener('click', () => alignSelection(b.dataset.multiAlign)));
+}
+
+function alignSelection(kind){
+  const ids = selectedIds.filter(id => tplDef(id) && !props(tplDef(id)).hidden);
+  if (ids.length < 2 || !lastLayout) return;
+  const layers = ids.map(id => lastLayout.lays.find(L => L.def.id === id)).filter(Boolean);
+  if (layers.length < 2) return;
+  const x0 = Math.min(...layers.map(L => L.box.x0));
+  const x1 = Math.max(...layers.map(L => L.box.x1));
+  const y0 = Math.min(...layers.map(L => L.box.y0));
+  const y1 = Math.max(...layers.map(L => L.box.y1));
+  const tx = kind === 'left' ? x0 : kind === 'centerX' ? (x0 + x1) / 2 : kind === 'right' ? x1 : null;
+  const ty = kind === 'top' ? y0 : kind === 'centerY' ? (y0 + y1) / 2 : kind === 'bottom' ? y1 : null;
+  const all = ovs(true);
+  layers.forEach(L => {
+    const o = all[L.def.id] || (all[L.def.id] = {});
+    if (tx != null) {
+      const cx = (L.box.x0 + L.box.x1) / 2;
+      const edgeX = kind === 'left' ? L.box.x0 : kind === 'right' ? L.box.x1 : cx;
+      o.dx = Math.round(((o.dx || 0) + (tx - edgeX)) * 2) / 2;
+    }
+    if (ty != null) {
+      const cy = (L.box.y0 + L.box.y1) / 2;
+      const edgeY = kind === 'top' ? L.box.y0 : kind === 'bottom' ? L.box.y1 : cy;
+      o.dy = Math.round(((o.dy || 0) + (ty - edgeY)) * 2) / 2;
+    }
+  });
+  dirty(); persist(); syncSel();
 }
 
 function syncSel(){
+  selectedIds = selectedIds.filter(id => !!tplDef(id));
+  if (selId && !selectedIds.includes(selId)) selId = selectedIds[0] || null;
+  const multi = selectedIds.length > 1;
   const def = selId && tplDef(selId);
-  if (selId && !def) selId = null;
   $('selPanel').hidden = !def;
   $('allPanel').hidden = !!def;
+  $('selPanel').classList.toggle('sel-panel-multi', multi);
+  $('multiSelTools').hidden = !multi;
+  $('singleSelTools').hidden = multi;
+  if (multi) $('multiSelCount').textContent = `${selectedIds.length}개 선택됨`;
   if (def) {
     const o = ov(selId), P = props(def);
     $('selName').textContent = def.label;
@@ -2587,15 +2677,22 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape' && !$('oocPop').hidden) { if (oocEditing) { oocEditing = null; renderOoc(); } else { setOoc(false); $('oocBtn').focus(); } return; }
   if (e.key === 'Escape' && $('drawer').classList.contains('on') && !exportCtl) { openDrawer(false); return; }
   if (typing) return;
-  if (e.key === 'Escape' && selId) { select(null); return; }
+  if (e.key === 'Escape' && selectedIds.length) { select(null); return; }
   const onCanvas = document.activeElement === document.body || document.activeElement === view;
   if (selId && e.key === 'Enter' && onCanvas) { e.preventDefault(); openEditor(selId); return; }
-  if (selId && e.key.startsWith('Arrow')) {
+  if (selectedIds.length && e.key.startsWith('Arrow')) {
     e.preventDefault();
-    const st = e.shiftKey ? 10 : 1, o = ov(selId);
-    const dx = (o.dx || 0) + (e.key === 'ArrowLeft' ? -st : e.key === 'ArrowRight' ? st : 0);
-    const dy = (o.dy || 0) + (e.key === 'ArrowUp' ? -st : e.key === 'ArrowDown' ? st : 0);
-    setOv(selId, {dx: dx || undefined, dy: dy || undefined});
+    const st = e.shiftKey ? 10 : 1;
+    const mx = e.key === 'ArrowLeft' ? -st : e.key === 'ArrowRight' ? st : 0;
+    const my = e.key === 'ArrowUp' ? -st : e.key === 'ArrowDown' ? st : 0;
+    const all = ovs(true);
+    selectedIds.forEach(id => {
+      const o = all[id] || (all[id] = {});
+      const dx = (o.dx || 0) + mx, dy = (o.dy || 0) + my;
+      o.dx = dx || undefined; o.dy = dy || undefined;
+      if (!o.dx && !o.dy) delete all[id];
+    });
+    dirty(); persist(); syncSel();
     return;
   }
   if (e.code === 'Space' && document.activeElement === document.body) { e.preventDefault(); setPlaying(!playing); }
@@ -2617,7 +2714,7 @@ layoutStage();
 loadFonts();
 if (document.fonts) document.fonts.ready.then(dirty);
 requestAnimationFrame(frame);
-window.__coverStudio = { set: p => set(p), exportGif, exportPng, loadFile, select: id => select(id), get state(){ return S; }, get layout(){ return lastLayout; }, openEditor: id => openEditor(id) };
+window.__coverStudio = { set: p => set(p), exportGif, exportPng, loadFile, select: id => select(id), get selectedIds(){ return [...selectedIds]; }, get state(){ return S; }, get layout(){ return lastLayout; }, openEditor: id => openEditor(id) };
 })();
 </script>
 </body>
