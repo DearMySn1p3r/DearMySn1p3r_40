@@ -544,6 +544,12 @@ textarea.input{height:auto;min-height:36px;padding:9px 12px;line-height:1.45;res
 .multi-align-grid button{height:32px;border-radius:9px;background:var(--fill);font-size:11.5px;font-weight:650;color:var(--sub);transition:all .15s ease}
 .multi-align-grid button:hover{background:var(--fill-2);color:var(--ink)}
 .multi-help{font-size:10.8px;color:#8c8c94;line-height:1.55}
+.multi-tools-row{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.multi-tools-row .btn{width:100%}
+.multi-tools-row .btn.active{background:var(--ink);color:var(--on-ink)}
+#multiHelp{display:none}
+#multiHelp.on{display:block}
+.marquee-box{position:absolute;border:1.5px solid #3b6cff;background:rgba(59,108,255,.08);border-radius:4px;pointer-events:none;z-index:25}
 .sel-panel-multi #singleSelTools{display:none!important}
 </style>
 </head>
@@ -641,6 +647,11 @@ textarea.input{height:auto;min-height:36px;padding:9px 12px;line-height:1.45;res
     <summary>텍스트</summary>
     <div class="sec-body">
       <div class="tip"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9l4-4 4 4M9 5v9a5 5 0 0 0 5 5h5"/></svg><div>캔버스의 글씨를 <b>끌어서 옮기고</b>, <b>두 번 클릭</b>하면 바로 고칠 수 있어요. 글씨를 한 번 누르면 그 글씨만 꾸밀 수 있어요.</div></div>
+      <div class="multi-tools-row" id="selectionToolbar">
+        <button type="button" class="btn subtle" id="rangeSelectBtn" aria-pressed="false">드래그로 범위 선택</button>
+        <button type="button" class="btn subtle" id="undoTextBtn" disabled>↶ 이전으로</button>
+      </div>
+      <p class="multi-help" id="multiHelp">범위 선택을 켠 뒤 캔버스의 빈 곳을 드래그하면 박스 안에 걸친 글씨를 한꺼번에 선택해요. 이미지 이동은 범위 선택을 끈 뒤 사용할 수 있어요.</p>
 
       <div id="selPanel" hidden>
         <div class="sec-body" style="padding:0">
@@ -656,7 +667,7 @@ textarea.input{height:auto;min-height:36px;padding:9px 12px;line-height:1.45;res
               <button type="button" data-multi-align="centerY">세로 중앙</button>
               <button type="button" data-multi-align="bottom">아래쪽 맞춤</button>
             </div>
-            <p class="multi-help">Shift(또는 Ctrl/⌘)를 누르고 글씨를 추가로 클릭하면 여러 개를 선택할 수 있어요.</p>
+            <p class="multi-help">Shift/Ctrl/⌘를 누르고 글씨를 클릭하면 추가 선택할 수 있어요. 선택한 글씨를 드래그할 때 Shift를 누르면 한 축을 고정한 채 이동해요.</p>
           </div>
           <div id="singleSelTools">
             <div class="field">
@@ -1796,6 +1807,17 @@ function drawSelection(ctx){
   };
   if (hoverId && !selectedIds.includes(hoverId)) draw(hoverId, false);
   if (selectedIds.length) selectedIds.forEach(id => draw(id, id === selId));
+  if (drag && drag.type === 'marquee' && drag.moved && drag.box) {
+    const r = toCanvasBox({x0:drag.box.x0,x1:drag.box.x1,y0:drag.box.y0,y1:drag.box.y1},0);
+    ctx.save();
+    ctx.lineWidth = 1.5 / viewScale;
+    ctx.strokeStyle = '#3b6cff';
+    ctx.fillStyle = 'rgba(59,108,255,.08)';
+    ctx.setLineDash([5 / viewScale, 3 / viewScale]);
+    ctx.fillRect(r.x,r.y,r.w,r.h);
+    ctx.strokeRect(r.x,r.y,r.w,r.h);
+    ctx.restore();
+  }
 }
 /* ───────────────── PREVIEW LOOP ───────────────── */
 const view = $('view'), vctx = view.getContext('2d');
@@ -1803,6 +1825,31 @@ let dispW = 0, dispH = 0, viewScale = 1, viewScaleY = 1, needs = true;
 let playing = !matchMedia('(prefers-reduced-motion: reduce)').matches;
 let clock = 0, lastTs = null;
 let selId = null, selectedIds = [], hoverId = null, drag = null;
+let marqueeEnabled = false;
+let undoStack = [];
+const MAX_UNDO = 50;
+function snapshotState(){ return JSON.parse(JSON.stringify(S)); }
+function pushUndo(){
+  undoStack.push(snapshotState());
+  if (undoStack.length > MAX_UNDO) undoStack.shift();
+  syncUndo();
+}
+function syncUndo(){
+  const b = $('undoTextBtn');
+  if (b) b.disabled = undoStack.length === 0;
+}
+function undoTextChange(){
+  if (!undoStack.length) return;
+  S = undoStack.pop();
+  closeEditor(true);
+  selId = null; selectedIds = []; hoverId = null; drag = null;
+  marqueeEnabled = false;
+  const rb = $('rangeSelectBtn'); if (rb) { rb.classList.remove('active'); rb.setAttribute('aria-pressed','false'); rb.textContent = '드래그로 범위 선택'; }
+  $('multiHelp')?.classList.remove('on');
+  processImage(); layoutStage(); syncUI(); syncSel(); updateSummary(); persist(); dirty();
+  syncUndo();
+  toast('이전 상태로 돌아갔어요');
+}
 function dirty(){ needs = true; }
 
 function layoutStage(){
@@ -1911,12 +1958,21 @@ function toggleSelection(id){
 view.addEventListener('pointerdown', e => {
   if (editor) closeEditor();
   const p = toMock(e), hit = hitLayer(p);
+  if (!p) return;
+
+  if (!hit && marqueeEnabled) {
+    drag = { type:'marquee', p, add:e.shiftKey || e.ctrlKey || e.metaKey, moved:false };
+    view.setPointerCapture(e.pointerId);
+    view.classList.add('dragging');
+    dirty();
+    return;
+  }
+
   if (hit) {
     const id = hit.def.id;
     const multiKey = e.shiftKey || e.ctrlKey || e.metaKey;
     if (multiKey) {
       if (selectedIds.includes(id)) {
-        // Modifier-click on an existing selection removes it without starting a drag.
         toggleSelection(id);
         return;
       }
@@ -1927,10 +1983,12 @@ view.addEventListener('pointerdown', e => {
     const dragIds = selectedIds.includes(id) ? [...selectedIds] : [id];
     const start = {};
     dragIds.forEach(did => { const o = ov(did); start[did] = {dx:o.dx || 0, dy:o.dy || 0}; });
-    drag = { type:'text', ids:dragIds, p, start, moved:false };
+    pushUndo();
+    drag = { type:'text', ids:dragIds, p, start, moved:false, axis:null, shift:e.shiftKey };
   } else if (overCover(p)) {
     select(null);
     if (!IMG.proc) { $('fileInput').click(); return; }
+    pushUndo();
     drag = { type:'img', p, x:S.imgX, y:S.imgY, cover:{...(lastLayout.tpl.art || lastLayout.tpl.cover)} };
   } else { select(null); return; }
   view.setPointerCapture(e.pointerId);
@@ -1946,10 +2004,23 @@ view.addEventListener('pointermove', e => {
     return;
   }
   if (!p) return;
-  if (drag.type === 'text') {
+  if (drag.type === 'marquee') {
     const ddx = p.x - drag.p.x, ddy = p.y - drag.p.y;
     if (!drag.moved && Math.hypot(ddx, ddy) * lastLayout.fit < 3) return;
     drag.moved = true;
+    drag.box = { x0:Math.min(drag.p.x,p.x), y0:Math.min(drag.p.y,p.y), x1:Math.max(drag.p.x,p.x), y1:Math.max(drag.p.y,p.y) };
+    dirty();
+    return;
+  }
+  if (drag.type === 'text') {
+    let ddx = p.x - drag.p.x, ddy = p.y - drag.p.y;
+    if (!drag.moved && Math.hypot(ddx, ddy) * lastLayout.fit < 3) return;
+    drag.moved = true;
+    if (drag.shift) {
+      if (!drag.axis && (Math.abs(ddx) > 1 || Math.abs(ddy) > 1)) drag.axis = Math.abs(ddx) >= Math.abs(ddy) ? 'x' : 'y';
+      if (drag.axis === 'x') ddy = 0;
+      if (drag.axis === 'y') ddx = 0;
+    }
     const all = ovs(true);
     drag.ids.forEach(id => {
       const o = all[id] || (all[id] = {}), st = drag.start[id] || {dx:0, dy:0};
@@ -1963,12 +2034,33 @@ view.addEventListener('pointermove', e => {
     const ox = src.width * sc - c.w, oy = src.height * sc - c.h;
     const nx = ox > .5 ? drag.x - (p.x - drag.p.x) / ox : S.imgX;
     const ny = oy > .5 ? drag.y - (p.y - drag.p.y) / oy : S.imgY;
+    if (Math.abs(nx - drag.x) > .00001 || Math.abs(ny - drag.y) > .00001) drag.moved = true;
     set({ imgX:Math.max(0, Math.min(1, nx)), imgY:Math.max(0, Math.min(1, ny)) }, true);
   }
 });
 const endDrag = () => {
   if (!drag) return;
+  if (drag.type === 'marquee') {
+    if (drag.moved && drag.box) {
+      const box = drag.box, hitIds = lastLayout.lays
+        .filter(L => !L.P.hidden && L.P.text.trim())
+        .filter(L => L.box.x1 >= box.x0 && L.box.x0 <= box.x1 && L.box.y1 >= box.y0 && L.box.y0 <= box.y1)
+        .map(L => L.def.id);
+      const next = drag.add ? [...selectedIds, ...hitIds] : hitIds;
+      const uniq = Array.from(new Set(next));
+      setSelection(uniq, uniq.includes(selId) ? selId : (uniq[0] || null));
+    }
+    drag = null;
+    view.classList.remove('dragging');
+    dirty();
+    return;
+  }
+  if (drag.type === 'text' && !drag.moved) {
+    // No position change: remove the unused undo snapshot from this click.
+    undoStack.pop(); syncUndo();
+  }
   if (drag.type === 'text' && drag.moved) { persist(); syncSel(); }
+  if (drag.type === 'img' && !drag.moved) { undoStack.pop(); syncUndo(); }
   drag = null; view.classList.remove('dragging'); persist();
 };
 view.addEventListener('pointerup', endDrag);
@@ -2059,7 +2151,7 @@ function set(patch, quiet){
   Object.assign(S, patch);
   if (('filter' in patch && patch.filter !== prev.filter) || ('bright' in patch && patch.bright !== prev.bright)) processImageSoon();
   if ('ratio' in patch) { particleKey = ''; layoutStage(); }
-  if ('mode' in patch && patch.mode !== prev.mode) { closeEditor(true); selId = null; selectedIds = []; hoverId = null; }
+  if ('mode' in patch && patch.mode !== prev.mode) { closeEditor(true); selId = null; selectedIds = []; hoverId = null; marqueeEnabled = false; undoStack = []; }
   if (!quiet) syncUI();
   syncSel();
   updateSummary();
@@ -2135,7 +2227,7 @@ function buildUI(){
     const keep = {};
     EXPORT_KEYS.forEach(k => keep[k] = S[k]);
     S = Object.assign(fresh(), keep);
-    selId = null; selectedIds = []; hoverId = null; closeEditor(true);
+    selId = null; selectedIds = []; hoverId = null; closeEditor(true); marqueeEnabled = false; undoStack = []; syncUndo();
     mouseTilt.x = mouseTilt.y = mouseTilt.tx = mouseTilt.ty = 0;
     processImage(); layoutStage(); syncUI(); syncSel(); updateSummary(); persist();
     toast('설정을 처음 상태로 되돌렸습니다');
@@ -2161,11 +2253,22 @@ function buildUI(){
   $('selHide').addEventListener('click', () => { if (!selId) return; const h = !ov(selId).hidden; setOv(selId, {hidden: h || undefined}); if (h) { toast('글씨를 숨겼어요. 아래 목록에서 다시 켤 수 있어요'); select(null); } });
   $('selDone').addEventListener('click', () => select(null));
   document.querySelectorAll('[data-multi-align]').forEach(b => b.addEventListener('click', () => alignSelection(b.dataset.multiAlign)));
+  $('rangeSelectBtn').addEventListener('click', () => {
+    marqueeEnabled = !marqueeEnabled;
+    const b = $('rangeSelectBtn');
+    b.classList.toggle('active', marqueeEnabled);
+    b.setAttribute('aria-pressed', String(marqueeEnabled));
+    $('multiHelp').classList.toggle('on', marqueeEnabled);
+    b.textContent = marqueeEnabled ? '범위 선택 끄기' : '드래그로 범위 선택';
+    view.classList.toggle('range-select-mode', marqueeEnabled);
+  });
+  $('undoTextBtn').addEventListener('click', undoTextChange);
 }
 
 function alignSelection(kind){
   const ids = selectedIds.filter(id => tplDef(id) && !props(tplDef(id)).hidden);
   if (ids.length < 2 || !lastLayout) return;
+  pushUndo();
   const layers = ids.map(id => lastLayout.lays.find(L => L.def.id === id)).filter(Boolean);
   if (layers.length < 2) return;
   const x0 = Math.min(...layers.map(L => L.box.x0));
@@ -2682,6 +2785,7 @@ document.addEventListener('keydown', e => {
   if (selId && e.key === 'Enter' && onCanvas) { e.preventDefault(); openEditor(selId); return; }
   if (selectedIds.length && e.key.startsWith('Arrow')) {
     e.preventDefault();
+    pushUndo();
     const st = e.shiftKey ? 10 : 1;
     const mx = e.key === 'ArrowLeft' ? -st : e.key === 'ArrowRight' ? st : 0;
     const my = e.key === 'ArrowUp' ? -st : e.key === 'ArrowDown' ? st : 0;
@@ -2696,6 +2800,7 @@ document.addEventListener('keydown', e => {
     return;
   }
   if (e.code === 'Space' && document.activeElement === document.body) { e.preventDefault(); setPlaying(!playing); }
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); undoTextChange(); return; }
   if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 's') { e.preventDefault(); openDrawer(true); }
 });
 
@@ -2708,6 +2813,7 @@ document.querySelectorAll('details.sec').forEach(d => d.addEventListener('toggle
 buildUI();
 syncUI();
 syncSel();
+syncUndo();
 setPlaying(playing);
 updateSummary();
 layoutStage();
@@ -2719,4 +2825,3 @@ window.__coverStudio = { set: p => set(p), exportGif, exportPng, loadFile, selec
 </script>
 </body>
 </html>
- 
