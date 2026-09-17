@@ -1202,7 +1202,21 @@ function fitSp(ctx, str, maxW, ls){
 }
 
 /* ── overrides per mockup ── */
+const MODE_TEXT_KEYS = new Set(['title','author','fontAll','alignAll','textColor','titleScale','showText','textShadow','glowColor','glowAmt','scrim','scrimColor','scrimAmt']);
 function ovs(create){ if (!S.L[S.mode]) { if (!create) return {}; S.L[S.mode] = {}; } return S.L[S.mode]; }
+function textState(create){
+  const all = ovs(create);
+  if (!all) return null;
+  if (!all.__text || typeof all.__text !== 'object') {
+    if (!create) return null;
+    all.__text = {};
+  }
+  return all.__text;
+}
+function textVal(key){
+  const st = textState(false);
+  return st && Object.prototype.hasOwnProperty.call(st, key) ? st[key] : S[key];
+}
 function ov(id){ return ovs(false)[id] || {}; }
 function setOv(id, patch){
   const all = ovs(true), o = all[id] || (all[id] = {});
@@ -1216,8 +1230,8 @@ const inkOn = c => lum(c) > .6 ? '#111111' : '#ffffff';
 
 function layerText(def){
   const o = ov(def.id);
-  if (def.role === 'title') return S.title.trim() ? S.title : def.text;
-  if (def.role === 'author') return S.author.trim() ? S.author : def.text;
+  if (def.role === 'title') { const v = textVal('title'); return String(v || '').trim() ? v : def.text; }
+  if (def.role === 'author') { const v = textVal('author'); return String(v || '').trim() ? v : def.text; }
   return o.text != null ? o.text : def.text;
 }
 function setLayerText(id, v){
@@ -1230,20 +1244,20 @@ function setLayerText(id, v){
 function props(def){
   const o = ov(def.id);
   const baseFont = def.font || BASE_FONT;
-  const font = o.font || (def.ui || def.spine ? baseFont : (S.fontAll || baseFont));
+  const font = o.font || (def.ui || def.spine ? baseFont : (textVal('fontAll') || baseFont));
   const fi = fontInfo(font);
-  const size = o.size != null ? o.size : def.size * (def.main ? S.titleScale : 1) * fi[3] / fontInfo(baseFont)[3];
-  const alignOver = o.align || (def.flow && S.alignAll) || '';
+  const size = o.size != null ? o.size : def.size * (def.main ? textVal('titleScale') : 1) * fi[3] / fontInfo(baseFont)[3];
+  const alignOver = o.align || (def.flow && textVal('alignAll')) || '';
   const raw = layerText(def);
   return {
     raw, text: def.upper ? raw.toUpperCase() : raw,
     font, weight: pickWeight(font, def.weight || 400), size,
     align: alignOver || def.align, alignOver,
-    color: o.color || (def.spine ? spineInk() : S.textColor),
+    color: o.color || (def.spine ? spineInk() : textVal('textColor')),
     alpha: def.alpha == null ? 1 : def.alpha,
     ls: (def.ls || 0) * size, lh: def.lh || 1.22,
     dx: o.dx || 0, dy: o.dy || 0,
-    hidden: !!o.hidden || (def.credits && !S.credits) || !S.showText
+    hidden: !!o.hidden || (def.credits && !S.credits) || !textVal('showText')
   };
 }
 
@@ -1342,8 +1356,8 @@ function drawLayer(ctx, L){
   ctx.globalAlpha = P.alpha;
   ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
   const shadowOnText = () => {
-    if (S.textShadow && !def.ui && !def.spine) {
-      ctx.shadowColor = rgba(S.glowColor, S.glowAmt * (def.main ? 1.1 : .9));
+    if (textVal('textShadow') && !def.ui && !def.spine) {
+      ctx.shadowColor = rgba(textVal('glowColor'), textVal('glowAmt') * (def.main ? 1.1 : .9));
       ctx.shadowBlur = Math.max(4, P.size * (def.main ? .4 : .55)) * RS.k;
       ctx.shadowOffsetY = Math.max(.8, P.size * .05) * RS.k;
     }
@@ -1447,12 +1461,12 @@ function drawShine(ctx, c, t){
   ctx.restore();
 }
 function drawScrim(ctx, c, lays){
-  if (!S.scrim || !S.showText) return;
+  if (!textVal('scrim') || !textVal('showText')) return;
   const mains = lays.filter(L => (L.def.role || L.def.main) && !L.def.spine && !L.P.hidden && L.box.y1 > c.y + c.h * .35);
   let top = mains.length ? Math.min(...mains.map(L => L.box.y0)) - 46 : c.y + c.h * .55;
   top = Math.max(c.y, Math.min(top, c.y + c.h * .72));
   const g = ctx.createLinearGradient(0, c.y + c.h, 0, top);
-  g.addColorStop(0, rgba(S.scrimColor, S.scrimAmt)); g.addColorStop(.55, rgba(S.scrimColor, S.scrimAmt * .45)); g.addColorStop(1, rgba(S.scrimColor, 0));
+  g.addColorStop(0, rgba(textVal('scrimColor'), textVal('scrimAmt'))); g.addColorStop(.55, rgba(textVal('scrimColor'), textVal('scrimAmt') * .45)); g.addColorStop(1, rgba(textVal('scrimColor'), 0));
   ctx.fillStyle = g; ctx.fillRect(c.x, top, c.w, c.y + c.h - top);
 }
 function baseFade(ctx, c, from, amt){
@@ -1512,7 +1526,7 @@ const MOCKUPS = {
     ctx.save();
     ctx.beginPath(); ctx.rect(c.x, c.y, c.w, c.h); ctx.clip();
     artBase(ctx, c);
-    if (S.showText && lum(S.textColor) > .5) baseFade(ctx, c, .5, .45);
+    if (textVal('showText') && lum(textVal('textColor')) > .5) baseFade(ctx, c, .5, .45);
     drawScrim(ctx, c, lays);
     drawSheen(ctx, c);
     lays.forEach(L => drawLayer(ctx, L));
@@ -1522,7 +1536,7 @@ const MOCKUPS = {
 
   device: { draw(ctx, t, lays){
     const c = TEMPLATES.device.cover, body = S.deviceColor;
-    const lt = lum(S.textColor) > .5, ui = S.textColor;
+    const lt = lum(textVal('textColor')) > .5, ui = textVal('textColor');
     shadowOn(ctx, 36, 20, .28); rr(ctx, 0, 0, 220, 440, 34); ctx.fillStyle = body; ctx.fill(); shadowOff(ctx);
     const eg = ctx.createLinearGradient(0, 0, 220, 0);
     eg.addColorStop(0, 'rgba(255,255,255,.16)'); eg.addColorStop(.05, 'rgba(255,255,255,0)'); eg.addColorStop(.95, 'rgba(0,0,0,0)'); eg.addColorStop(1, 'rgba(0,0,0,.18)');
@@ -1531,7 +1545,7 @@ const MOCKUPS = {
     ctx.save();
     rr(ctx, c.x, c.y, c.w, c.h, 25); ctx.clip();
     artBase(ctx, c);
-    if (S.showText) {
+    if (textVal('showText')) {
       if (lt) baseFade(ctx, c, .38, .72);
       else { const g = ctx.createLinearGradient(0, c.y + c.h, 0, c.y + c.h * .38); g.addColorStop(0, 'rgba(255,255,255,.9)'); g.addColorStop(1, 'rgba(255,255,255,0)'); ctx.fillStyle = g; ctx.fillRect(c.x, c.y + c.h * .38, c.w, c.h * .62); }
       const tg = ctx.createLinearGradient(0, c.y, 0, c.y + 70);
@@ -1540,7 +1554,7 @@ const MOCKUPS = {
     }
     drawScrim(ctx, c, lays);
     drawSheen(ctx, c);
-    if (S.showText) {
+    if (textVal('showText')) {
       ctx.save();
       ctx.strokeStyle = ui; ctx.fillStyle = ui; ctx.lineWidth = .9; ctx.globalAlpha = .95;
       // signal + battery
@@ -1556,7 +1570,7 @@ const MOCKUPS = {
       ctx.restore();
     }
     lays.forEach(L => drawLayer(ctx, L));
-    if (S.showText) { rr(ctx, 80, 424, 60, 3, 1.5); ctx.fillStyle = lt ? 'rgba(255,255,255,.7)' : 'rgba(0,0,0,.5)'; ctx.fill(); }
+    if (textVal('showText')) { rr(ctx, 80, 424, 60, 3, 1.5); ctx.fillStyle = lt ? 'rgba(255,255,255,.7)' : 'rgba(0,0,0,.5)'; ctx.fill(); }
     drawShine(ctx, c, t);
     ctx.restore();
     rr(ctx, 80, 14, 60, 17, 8.5); ctx.fillStyle = '#050505'; ctx.fill();
@@ -2148,7 +2162,11 @@ function loadFonts(){ if (document.fonts) FONTS.forEach(f => f[2].forEach(w => d
 
 function set(patch, quiet){
   const prev = {...S};
-  Object.assign(S, patch);
+  const globalPatch = {};
+  const textPatch = {};
+  Object.entries(patch).forEach(([k,v]) => (MODE_TEXT_KEYS.has(k) ? textPatch : globalPatch)[k] = v);
+  Object.assign(S, globalPatch);
+  if (Object.keys(textPatch).length) Object.assign(textState(true), textPatch);
   if (('filter' in patch && patch.filter !== prev.filter) || ('bright' in patch && patch.bright !== prev.bright)) processImageSoon();
   if ('ratio' in patch) { particleKey = ''; layoutStage(); }
   if ('mode' in patch && patch.mode !== prev.mode) { closeEditor(true); selId = null; selectedIds = []; hoverId = null; marqueeEnabled = false; undoStack = []; }
@@ -2312,7 +2330,7 @@ function syncSel(){
     if (document.activeElement !== ta) ta.value = layerText(def);
     ta.rows = def.kind === 'laurel' || def.maxW ? 3 : 1;
     $('selTextHint').hidden = !def.role;
-    $('selTextHint').textContent = def.role === 'title' ? '제목은 다른 목업에도 함께 바뀌어요.' : '이 글씨는 다른 목업에도 함께 바뀌어요.';
+    $('selTextHint').textContent = '이 글씨의 내용과 위치는 현재 목업에만 적용돼요.';
     syncFontPicker($('selFont'), o.font || '');
     $('selFontWrap').hidden = !!(def.ui || def.spine);
     const size = +P.size.toFixed(1), range = $('selSize');
@@ -2344,11 +2362,11 @@ function syncSel(){
 
 function syncUI(){
   document.querySelectorAll('#ratioBar button').forEach(b => b.classList.toggle('on', b.dataset.ratio === S.ratio));
-  syncFontPicker($('fontAll'), S.fontAll);
+  syncFontPicker($('fontAll'), textVal('fontAll'));
   document.querySelectorAll('#types button').forEach(b => b.classList.toggle('on', b.dataset.mode === S.mode));
-  document.querySelectorAll('.seg[data-key]').forEach(el => el.querySelectorAll('button').forEach(b => b.classList.toggle('on', String(S[el.dataset.key]) === b.dataset.v)));
+  document.querySelectorAll('.seg[data-key]').forEach(el => el.querySelectorAll('button').forEach(b => { const v = MODE_TEXT_KEYS.has(el.dataset.key) ? textVal(el.dataset.key) : S[el.dataset.key]; b.classList.toggle('on', String(v) === b.dataset.v); }));
   document.querySelectorAll('.swatches[data-key]').forEach(el => {
-    const v = String(S[el.dataset.key]).toLowerCase();
+    const v = String(MODE_TEXT_KEYS.has(el.dataset.key) ? textVal(el.dataset.key) : S[el.dataset.key]).toLowerCase();
     let found = false;
     el.querySelectorAll('.sw').forEach(b => { const on = b.dataset.v.toLowerCase() === v; b.classList.toggle('on', on); found = found || on; });
     const cu = el.querySelector('.sw-custom'); cu.classList.toggle('on', !found);
@@ -2356,15 +2374,16 @@ function syncUI(){
     cu.querySelector('input').value = /^#[0-9a-f]{6}$/.test(v) ? v : '#000000';
   });
   document.querySelectorAll('input[type=range][data-key]').forEach(el => {
-    el.value = S[el.dataset.key];
+    const v = MODE_TEXT_KEYS.has(el.dataset.key) ? textVal(el.dataset.key) : S[el.dataset.key];
+    el.value = v;
     const p = (el.value - el.min) / (el.max - el.min) * 100; el.style.setProperty('--p', p + '%');
     const out = document.querySelector(`output[data-out="${el.dataset.key}"]`);
-    if (out) out.textContent = (FMT[el.dataset.fmt] || (v => v))(S[el.dataset.key]);
+    if (out) out.textContent = (FMT[el.dataset.fmt] || (v => v))(v);
   });
-  document.querySelectorAll('input[type=text][data-key]').forEach(el => { if (el.value !== S[el.dataset.key]) el.value = S[el.dataset.key]; });
-  document.querySelectorAll('input[type=checkbox][data-key]').forEach(el => el.checked = !!S[el.dataset.key]);
+  document.querySelectorAll('input[type=text][data-key]').forEach(el => { const v = MODE_TEXT_KEYS.has(el.dataset.key) ? textVal(el.dataset.key) : S[el.dataset.key]; if (el.value !== v) el.value = v; });
+  document.querySelectorAll('input[type=checkbox][data-key]').forEach(el => { const v = MODE_TEXT_KEYS.has(el.dataset.key) ? textVal(el.dataset.key) : S[el.dataset.key]; el.checked = !!v; });
   document.querySelectorAll('[data-show]').forEach(el => {
-    const ok = el.dataset.show.split(';').every(cond => { const [k, vals] = cond.split('='); return vals.split('|').includes(String(S[k])); });
+    const ok = el.dataset.show.split(';').every(cond => { const [k, vals] = cond.split('='); const v = MODE_TEXT_KEYS.has(k) ? textVal(k) : S[k]; return vals.split('|').includes(String(v)); });
     el.hidden = !ok;
   });
   document.querySelectorAll('#fmtPick button').forEach(b => b.classList.toggle('on', b.dataset.fmt === S.fmt));
@@ -2598,7 +2617,7 @@ $('scrim').addEventListener('click', () => { if (!exportCtl) openDrawer(false); 
 document.querySelectorAll('#fmtPick button').forEach(b => b.addEventListener('click', () => { if (!exportCtl) set({fmt:b.dataset.fmt}); }));
 
 function fileBase(){
-  const t = (S.title || 'cover').trim().replace(/[\\/:*?"<>|]+/g, '').replace(/\s+/g, '_').slice(0, 40) || 'cover';
+  const t = (textVal('title') || 'cover').trim().replace(/[\\/:*?"<>|]+/g, '').replace(/\s+/g, '_').slice(0, 40) || 'cover';
   return `${t}_${S.mode}`;
 }
 function sizeLabel(bytes){ return bytes > 1048576 ? (bytes / 1048576).toFixed(1) + 'MB' : Math.max(1, Math.round(bytes / 1024)) + 'KB'; }
